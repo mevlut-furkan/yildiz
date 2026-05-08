@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Algoritma Yolculuğu — 5. Sınıf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky:    #EBF4FF;
+    --ink:    #1B2D4F;
+    --paper:  #FFFDF7;
+    --yellow: #FFD43B;
+    --orange: #FF8C42;
+    --green:  #52B788;
+    --red:    #E63946;
+    --blue:   #4361EE;
+    --purple: #7B2FBE;
+    --teal:   #0077B6;
+    --light:  #F0F7FF;
+    --shadow: 3px 3px 0 var(--ink);
+    --radius: .75rem;
+  }
+
+  body {
+    height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(160deg, #EBF4FF 0%, #F0E6FF 50%, #FFE8D6 100%);
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+  }
+
+  .wrap {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    padding: .5rem .75rem .5rem;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .4rem .75rem;
+    background: var(--ink);
+    border-radius: 1rem;
+    margin-bottom: .5rem;
+    gap: .5rem;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .header-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .header-title {
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--yellow);
+    line-height: 1;
+  }
+  .header-sub {
+    font-size: .6rem;
+    color: rgba(255,255,255,.6);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .header-stats {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: nowrap;
+  }
+  .stat-chip {
+    background: rgba(255,255,255,.12);
+    border: 1.5px solid rgba(255,255,255,.25);
+    border-radius: .5rem;
+    padding: .25rem .55rem;
+    text-align: center;
+    min-width: 3.2rem;
+  }
+  .stat-chip .num {
+    font-size: .95rem;
+    font-weight: 900;
+    color: var(--yellow);
+    line-height: 1;
+    display: block;
+  }
+  .stat-chip .lbl {
+    font-size: .45rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    font-weight: 700;
+  }
+  .header-btns {
+    display: flex;
+    gap: .35rem;
+  }
+  .hbtn {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .3rem .6rem;
+    border-radius: .55rem;
+    border: none;
+    font-family: inherit;
+    font-size: .68rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+    white-space: nowrap;
+  }
+  .hbtn:hover { transform: translateY(-1px); opacity: .9; }
+  .hbtn-pool { background: var(--yellow); color: var(--ink); }
+  .hbtn-restart { background: var(--orange); color: white; }
+  .hbtn-route { background: var(--teal); color: white; }
+
+  /* ── GAME AREA ── */
+  .game-area {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: .5rem;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ── MAP ── */
+  .map-wrap {
+    position: relative;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    background: #C8E6F5;
+    min-height: 0;
+    height: 100%;
+  }
+  .map-wrap svg#map-svg { display: block; width: 100%; height: 100%; }
+
+  /* CAR */
+  .car {
+    position: absolute;
+    pointer-events: none;
+    z-index: 10;
+    transform: translate(-50%, -130%);
+    transition: left 1.2s cubic-bezier(.4,.1,.2,1), top 1.2s cubic-bezier(.4,.1,.2,1);
+  }
+  .car-bubble {
+    background: var(--yellow);
+    border-radius: 50%;
+    padding: .35rem;
+    border: 2.5px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: transform .6s cubic-bezier(.4,.1,.2,1);
+  }
+  .car-bubble-inner {
+    display: inline-block;
+    animation: bounce-car 1.8s ease-in-out infinite;
+  }
+  .car-shadow { width: .35rem; height: .35rem; border-radius: 50%; background: rgba(27,45,79,.35); margin: .12rem auto 0; filter: blur(1px); }
+  @keyframes bounce-car {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* WIN OVERLAY */
+  .win-overlay {
+    position: absolute; inset: 0;
+    background: rgba(27,45,79,.78);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(5px);
+    z-index: 20;
+    opacity: 0; pointer-events: none;
+    transition: opacity .4s;
+  }
+  .win-overlay.show { opacity: 1; pointer-events: all; }
+  .win-card {
+    background: linear-gradient(135deg, #FFD43B 0%, #FF8C42 60%, #E63946 100%);
+    border-radius: 1.5rem;
+    padding: 2rem 1.75rem;
+    text-align: center;
+    border: 4px solid var(--paper);
+    max-width: 340px;
+    margin: 1rem;
+    animation: pop .55s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .win-trophy { font-size: 4rem; margin-bottom: .5rem; }
+  .win-title { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.8rem; color: white; line-height: 1.1; margin: .4rem 0; }
+  .win-info { color: rgba(255,255,255,.9); font-size: .9rem; font-weight: 600; margin-bottom: 1rem; }
+  .btn-win { background: white; color: #C1390F; border: none; font-family: inherit; font-weight: 900; font-size: .9rem; padding: .65rem 1.5rem; border-radius: 2rem; cursor: pointer; transition: transform .15s; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+  .btn-win:hover { transform: scale(1.05); }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    grid-column: 2;
+    grid-row: 1;
+    background: var(--paper);
+    border-radius: 1.1rem;
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: opacity .35s, transform .35s;
+  }
+  .q-card.hidden { opacity: 0; transform: translateX(1rem); pointer-events: none; }
+  /* CRITICAL FIX: hidden attribute did not work because of display:flex */
+  .q-card[hidden] { display: none !important; }
+
+  /* Step strip */
+  .step-strip {
+    background: var(--ink);
+    padding: .45rem .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: .35rem;
+  }
+  .step-badge {
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: .62rem;
+    font-weight: 900;
+    padding: .18rem .6rem;
+    border-radius: 2rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .step-progress {
+    color: rgba(255,255,255,.55);
+    font-size: .6rem;
+    font-weight: 700;
+  }
+  .step-city {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    color: white;
+    font-size: .68rem;
+    font-weight: 800;
+  }
+  .step-city-dot {
+    width: .55rem; height: .55rem;
+    border-radius: 50%;
+    background: var(--orange);
+    display: inline-block;
+  }
+
+  /* q body */
+  .q-body {
+    padding: .65rem .85rem;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+  }
+
+  /* Algorithm steps panel */
+  .algo-header {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .algo-icon { font-size: 1rem; }
+  .algo-title {
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    font-size: .95rem;
+    color: var(--ink);
+  }
+
+  .algo-story {
+    font-size: .76rem;
+    line-height: 1.55;
+    color: rgba(27,45,79,.78);
+    background: var(--sky);
+    border-radius: .55rem;
+    padding: .5rem .65rem;
+    border-left: 3px solid var(--blue);
+  }
+
+  /* ALGORITHM STEPS */
+  .steps-label {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--purple);
+    margin-bottom: .1rem;
+  }
+  .algo-steps {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+  .algo-step {
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: .5rem;
+    padding: .4rem .55rem;
+    box-shadow: 2px 2px 0 var(--ink);
+    position: relative;
+    animation: step-in .3s ease both;
+  }
+  .algo-step.highlight {
+    border-color: var(--blue);
+    background: #EEF3FF;
+    box-shadow: 2px 2px 0 var(--blue);
+  }
+  .algo-step.highlight .step-num {
+    background: var(--blue);
+    color: white;
+  }
+  .algo-step.done {
+    border-color: var(--green);
+    background: #EDFAF4;
+    box-shadow: 2px 2px 0 var(--green);
+  }
+  .algo-step.done .step-num {
+    background: var(--green);
+    color: white;
+  }
+  @keyframes step-in { from { opacity:0; transform: translateX(-6px); } to { opacity:1; transform:none; } }
+  .step-num {
+    min-width: 1.4rem;
+    height: 1.4rem;
+    border-radius: .35rem;
+    background: var(--ink);
+    color: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .65rem;
+    font-weight: 900;
+    flex-shrink: 0;
+    border: 1.5px solid var(--ink);
+  }
+  .step-text {
+    font-size: .74rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .step-done-icon {
+    margin-left: auto;
+    font-size: .9rem;
+    flex-shrink: 0;
+  }
+
+  /* ── BAŞLA / BİTİR TERMINATORS (flowchart oval style) ── */
+  .algo-step.terminator {
+    border-radius: 1.2rem;
+    padding: .35rem .8rem;
+    justify-content: center;
+    background: linear-gradient(135deg, #FFFDF7 0%, #F0F7FF 100%);
+  }
+  .algo-step.terminator-start {
+    border-color: var(--green);
+    box-shadow: 2px 2px 0 var(--green);
+    background: linear-gradient(135deg, #EDFAF4 0%, #D9F5E6 100%);
+  }
+  .algo-step.terminator-end {
+    border-color: var(--red);
+    box-shadow: 2px 2px 0 var(--red);
+    background: linear-gradient(135deg, #FFEBED 0%, #FFD8DC 100%);
+  }
+  .algo-step.terminator .term-icon {
+    font-size: .9rem;
+    flex-shrink: 0;
+  }
+  .algo-step.terminator .term-text {
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    font-size: .82rem;
+    letter-spacing: .14em;
+  }
+  .algo-step.terminator-start .term-text { color: #1E7A4B; }
+  .algo-step.terminator-end .term-text { color: #B02230; }
+
+  /* Question board */
+  .q-board {
+    background: var(--ink);
+    border-radius: .65rem;
+    padding: .6rem .8rem;
+    text-align: center;
+    border: 2px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .q-board::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 1px, transparent 10px);
+    opacity: .05;
+  }
+  .q-question-label {
+    font-size: .55rem;
+    font-weight: 900;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--yellow);
+    opacity: .8;
+    display: block;
+    margin-bottom: .2rem;
+  }
+  .q-expr {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--paper);
+    position: relative;
+    line-height: 1.3;
+  }
+
+  /* Options */
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+  .opt-btn {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: .5rem;
+    padding: .38rem .55rem;
+    text-align: left;
+    font-family: inherit;
+    font-size: .72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .12s, transform .12s, box-shadow .12s;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .opt-btn:hover:not(:disabled) { background: #FFF3CC; transform: translateY(-2px); box-shadow: 2px 4px 0 var(--ink); }
+  .opt-btn:disabled { cursor: not-allowed; }
+  .opt-btn.correct { background: var(--green); color: white; border-color: var(--green); box-shadow: 2px 2px 0 #2A8C60; }
+  .opt-btn.wrong   { background: var(--red); color: white; border-color: var(--red); }
+  .opt-btn.dimmed  { opacity: .45; }
+  .opt-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.35rem; height: 1.35rem; border-radius: .3rem;
+    background: var(--ink); color: var(--yellow);
+    font-size: .62rem; font-weight: 900;
+    flex-shrink: 0;
+  }
+  .opt-btn.correct .opt-letter,
+  .opt-btn.wrong   .opt-letter { background: rgba(255,255,255,.3); color: white; }
+  .opt-text { flex: 1; }
+
+  /* Feedback */
+  .feedback {
+    border-radius: .6rem;
+    border: 2px solid;
+    padding: .5rem .65rem;
+    display: none;
+    animation: pop .3s ease both;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok  { border-color: var(--green); background: rgba(82,183,136,.1); }
+  .feedback.err { border-color: var(--red);   background: rgba(230,57,70,.1); }
+  .fb-row { display: flex; align-items: flex-start; gap: .4rem; }
+  .fb-emoji { font-size: 1.1rem; flex-shrink: 0; }
+  .fb-title { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: .82rem; margin-bottom: .1rem; }
+  .feedback.ok  .fb-title { color: #1E7A4B; }
+  .feedback.err .fb-title { color: #B02230; }
+  .fb-exp { font-size: .7rem; line-height: 1.5; color: rgba(27,45,79,.8); }
+  .btn-continue {
+    margin-top: .4rem;
+    padding: .38rem .9rem;
+    border-radius: 2rem;
+    border: 2px solid var(--ink);
+    font-family: inherit;
+    font-weight: 900;
+    font-size: .72rem;
+    cursor: pointer;
+    transition: transform .12s;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .btn-continue:hover { transform: scale(1.03); }
+  .btn-continue.ok  { background: var(--green); color: white; }
+  .btn-continue.err { background: var(--ink); color: var(--yellow); }
+
+  /* ── MODAL ── */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(27,45,79,.7);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+  }
+  .modal-bg.show { display: flex; }
+  .modal-card {
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 1.5rem;
+    box-shadow: 6px 6px 0 var(--ink);
+    width: 100%; max-width: 680px;
+    overflow: hidden;
+    animation: pop .35s cubic-bezier(.34,1.56,.64,1) both;
+    margin: auto;
+  }
+  .modal-head {
+    background: var(--ink);
+    color: var(--paper);
+    padding: .85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-head h2 { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.35rem; color: var(--yellow); }
+  .btn-close { background: transparent; border: none; color: var(--paper); font-size: 1.6rem; cursor: pointer; line-height: 1; padding: 0 .3rem; }
+  .btn-close:hover { color: var(--yellow); }
+  .modal-body { padding: 1.25rem; max-height: 75vh; overflow-y: auto; }
+
+  /* Pool */
+  .pool-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; padding-bottom: .85rem; border-bottom: 2px dashed rgba(27,45,79,.15); }
+  .pool-count { font-size: .78rem; font-weight: 800; color: var(--teal); }
+  .pool-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .btn-mini { padding: .45rem .9rem; border-radius: 2rem; border: 2px solid var(--ink); font-family: inherit; font-weight: 800; font-size: .75rem; cursor: pointer; transition: transform .1s; }
+  .btn-mini:hover { transform: translateY(-1px); }
+  .btn-add { background: var(--green); color: white; box-shadow: 2px 2px 0 var(--ink); }
+  .btn-reset { background: white; color: var(--ink); }
+  .btn-cancel { background: white; color: var(--ink); }
+  .btn-save { background: var(--yellow); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+  .btn-delete { background: var(--red); color: white; padding: .3rem .65rem; font-size: .72rem; border: 2px solid var(--ink); border-radius: 2rem; cursor: pointer; font-family: inherit; font-weight: 800; }
+  .btn-edit { background: var(--teal); color: white; padding: .3rem .65rem; font-size: .72rem; border: 2px solid var(--ink); border-radius: 2rem; cursor: pointer; font-family: inherit; font-weight: 800; margin-right: .3rem; }
+  .pool-list { display: flex; flex-direction: column; gap: .55rem; }
+  .pool-item { background: white; border: 2px solid var(--ink); border-radius: .65rem; padding: .75rem .9rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; box-shadow: 2px 2px 0 var(--ink); }
+  .pool-item-info { flex: 1; min-width: 180px; }
+  .pool-item-topic { font-weight: 900; font-size: .85rem; margin-bottom: .1rem; }
+  .pool-item-steps { font-size: .7rem; color: rgba(27,45,79,.6); margin-top: .15rem; }
+  .pool-item-diff { font-size: .6rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: var(--purple); }
+
+  /* Editor */
+  .editor-form { display: flex; flex-direction: column; gap: .85rem; }
+  .editor-form label { display: flex; flex-direction: column; gap: .3rem; font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; color: rgba(27,45,79,.65); }
+  .editor-form input[type="text"], .editor-form textarea {
+    font-family: inherit; font-size: .88rem; font-weight: 600;
+    padding: .55rem .75rem;
+    border: 2px solid var(--ink);
+    border-radius: .5rem;
+    background: white; color: var(--ink);
+    text-transform: none; letter-spacing: normal;
+    width: 100%; resize: vertical;
+  }
+  .editor-form input:focus, .editor-form textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,97,238,.2); }
+  .editor-options-section { border: 2px dashed rgba(27,45,79,.2); border-radius: .65rem; padding: .75rem; background: rgba(255,255,255,.5); }
+  .editor-options-section h4 { font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .55rem; }
+  .editor-opt-row { display: flex; align-items: center; gap: .45rem; margin-bottom: .4rem; }
+  .editor-opt-row input[type="radio"] { width: 1.1rem; height: 1.1rem; accent-color: var(--green); cursor: pointer; }
+  .editor-opt-row input[type="text"] { flex: 1; }
+  .editor-opt-letter { width: 1.4rem; text-align: center; font-weight: 900; color: var(--ink); }
+  .editor-actions { display: flex; gap: .55rem; justify-content: flex-end; margin-top: .4rem; padding-top: .85rem; border-top: 2px dashed rgba(27,45,79,.15); }
+
+  /* Algorithm steps editor */
+  .steps-editor-section { border: 2px dashed rgba(123,47,190,.3); border-radius: .65rem; padding: .75rem; background: rgba(240,230,255,.2); }
+  .steps-editor-section h4 { font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; color: var(--purple); margin-bottom: .55rem; }
+  .step-edit-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .4rem; }
+  .step-edit-num { min-width: 1.6rem; height: 1.6rem; background: var(--ink); color: var(--yellow); border-radius: .35rem; display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 900; flex-shrink: 0; }
+  .step-edit-row input[type="text"] { flex: 1; font-size: .82rem; }
+
+  /* Route builder */
+  .rb-panel-wrap[hidden] { display: none !important; }
+  .rb-panel-wrap {
+    grid-column: 2; grid-row: 1;
+    background: var(--ink);
+    border-radius: 1.1rem;
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    height: 100%; min-height: 0;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .rb-panel-inner { padding: .9rem; color: var(--paper); display: flex; flex-direction: column; gap: .55rem; flex: 1; }
+  .rb-title { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.05rem; color: var(--yellow); }
+  .rb-instr { font-size: .75rem; color: rgba(255,255,255,.75); font-weight: 600; line-height: 1.4; background: rgba(255,255,255,.1); border-radius: .45rem; padding: .45rem .6rem; }
+  .rb-pills { display: flex; flex-direction: column; gap: .35rem; }
+  .rb-pill { display: flex; align-items: center; gap: .4rem; background: rgba(255,255,255,.1); border-radius: .45rem; padding: .4rem .6rem; border: 1.5px solid rgba(255,255,255,.18); }
+  .rb-pill-label { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.55); flex: 0 0 4.5rem; }
+  .rb-pill-val { font-size: .82rem; font-weight: 800; color: white; flex: 1; }
+  .rb-dot-start { width: .6rem; height: .6rem; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .rb-dot-end { width: .6rem; height: .6rem; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+  .rb-pill-clear { background: transparent; border: none; color: rgba(255,255,255,.4); font-size: 1rem; cursor: pointer; padding: 0 .2rem; line-height: 1; margin-left: auto; }
+  .rb-pill-clear:hover { color: var(--red); }
+  .rb-sliders { display: flex; flex-direction: column; gap: .45rem; }
+  .rb-slider-row { display: flex; flex-direction: column; gap: .3rem; }
+  .rb-slider-label { font-size: .62rem; font-weight: 800; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .07em; }
+  .rb-slider-grp { display: flex; align-items: center; gap: .5rem; }
+  .rb-slider-grp input[type="range"] { flex: 1; accent-color: var(--yellow); }
+  .rb-slider-val { font-size: .85rem; font-weight: 900; color: var(--yellow); min-width: 1.4rem; text-align: right; }
+  .rb-actions { display: flex; gap: .45rem; margin-top: auto; }
+  .rb-actions .btn-mini { flex: 1; text-align: center; }
+
+  /* Difficulty chips on step strip */
+  .diff-chip {
+    font-size: .52rem;
+    font-weight: 900;
+    padding: .15rem .5rem;
+    border-radius: 2rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .diff-easy   { background: var(--green); color: white; }
+  .diff-medium { background: var(--orange); color: white; }
+  .diff-hard   { background: var(--red); color: white; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    position: absolute;
+    bottom: .55rem; left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 1.5rem);
+    max-width: 420px;
+    background: rgba(255,255,255,.7);
+    border: 2px solid var(--ink);
+    border-radius: 2rem;
+    padding: .15rem;
+    z-index: 5;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .progress-bar {
+    height: .55rem;
+    background: linear-gradient(90deg, var(--green) 0%, var(--yellow) 50%, var(--orange) 100%);
+    border-radius: 2rem;
+    width: 0%;
+    transition: width .8s cubic-bezier(.4,.1,.2,1);
+    position: relative;
+  }
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.5) 50%, transparent 100%);
+    border-radius: 2rem;
+    animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .progress-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: .55rem;
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── STREAK & BEST SCORE CHIPS ── */
+  .stat-chip.streak { background: rgba(255,140,66,.25); border-color: rgba(255,212,59,.4); }
+  .stat-chip.streak.fire .num { color: #FFB627; animation: fire-pulse .8s ease-in-out infinite; }
+  @keyframes fire-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
+  .stat-chip.best { background: rgba(82,183,136,.2); border-color: rgba(82,183,136,.5); }
+  .stat-chip.best .num { color: #B5F5C8; }
+
+  /* ── SMALL ICON BUTTONS (sound, hint) ── */
+  .icon-btn {
+    background: rgba(255,255,255,.12);
+    border: 1.5px solid rgba(255,255,255,.25);
+    color: white;
+    font-size: 1rem;
+    width: 2rem; height: 2rem;
+    border-radius: .5rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .12s, background .15s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,.22); transform: translateY(-1px); }
+  .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .icon-btn.has-uses { background: var(--purple); border-color: var(--purple); }
+  .icon-btn .uses-badge {
+    position: absolute;
+    top: -.3rem; right: -.3rem;
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: .55rem;
+    font-weight: 900;
+    border-radius: 1rem;
+    min-width: 1rem; height: 1rem;
+    padding: 0 .25rem;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--ink);
+  }
+  .icon-btn-wrap { position: relative; display: inline-flex; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 1rem; left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    background: var(--ink);
+    color: var(--yellow);
+    padding: .55rem 1.1rem;
+    border-radius: 2rem;
+    font-weight: 800;
+    font-size: .8rem;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.25);
+    border: 2px solid var(--yellow);
+    z-index: 200;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── CONFETTI ── */
+  .confetti-canvas {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 21;
+  }
+
+  /* ── KBD HINT BAR ── */
+  .kbd-hint {
+    position: absolute;
+    bottom: .55rem; right: .85rem;
+    font-size: .55rem;
+    color: rgba(27,45,79,.5);
+    font-weight: 700;
+    z-index: 4;
+    pointer-events: none;
+    background: rgba(255,255,255,.7);
+    padding: .2rem .5rem;
+    border-radius: .35rem;
+    letter-spacing: .04em;
+  }
+  .kbd { background: var(--ink); color: var(--yellow); padding: .05rem .3rem; border-radius: .25rem; font-family: monospace; font-size: .55rem; margin: 0 .1rem; }
+
+  /* Streak badge appears next to feedback */
+  .streak-flash {
+    display: inline-block;
+    margin-left: .35rem;
+    padding: .1rem .4rem;
+    background: var(--orange);
+    color: white;
+    border-radius: 1rem;
+    font-size: .65rem;
+    font-weight: 900;
+    animation: pop .3s ease both;
+  }
+
+  /* ── COUNTDOWN TIMER STATES ── */
+  .stat-chip.timer-warn   .num { color: #FFA94D; animation: timer-pulse 1.2s ease-in-out infinite; }
+  .stat-chip.timer-danger .num { color: #FF5C66; animation: timer-pulse .5s ease-in-out infinite; }
+  .stat-chip.timer-danger {
+    background: rgba(230,57,70,.25);
+    border-color: rgba(255,92,102,.6);
+  }
+  @keyframes timer-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+  }
+
+  /* ── GAME OVER OVERLAY (uses win-overlay base) ── */
+  .win-overlay.lose .win-card {
+    background: linear-gradient(135deg, #4A0E1A 0%, #8B1E2C 50%, #C1390F 100%);
+    border-color: #FFA4A4;
+  }
+  .win-overlay.lose .win-trophy { animation: shake .55s ease both; }
+  @keyframes shake {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-12deg); }
+    40% { transform: rotate(10deg); }
+    60% { transform: rotate(-8deg); }
+    80% { transform: rotate(6deg); }
+  }
+  .win-overlay.lose .btn-win { color: #8B1E2C; }
+
+  /* Option button keyboard hint */
+  .opt-btn .opt-kbd {
+    margin-left: auto;
+    font-size: .55rem;
+    color: rgba(27,45,79,.45);
+    font-weight: 700;
+    background: rgba(27,45,79,.08);
+    padding: .1rem .3rem;
+    border-radius: .25rem;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .opt-btn.correct .opt-kbd, .opt-btn.wrong .opt-kbd { background: rgba(255,255,255,.25); color: rgba(255,255,255,.7); }
+
+  /* eliminated by hint */
+  .opt-btn.eliminated {
+    background: rgba(230,57,70,.1);
+    color: rgba(27,45,79,.35);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    cursor: not-allowed;
+    border-style: dashed;
+    box-shadow: none;
+  }
+  .opt-btn.eliminated .opt-letter { background: rgba(27,45,79,.25); color: rgba(255,255,255,.6); }
+
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 760px) {
+    body { height: auto; min-height: 100vh; overflow-y: auto; }
+    .wrap { height: auto; min-height: 100vh; }
+    .header { flex-wrap: wrap; }
+    .header-stats { order: 3; flex: 1 1 100%; justify-content: center; margin-top: .35rem; }
+    .game-area { grid-template-columns: 1fr; height: auto; }
+    .map-wrap { height: 45vh; min-height: 280px; }
+    .q-card { height: auto; min-height: 320px; }
+    .options { grid-template-columns: 1fr; }
+    .kbd-hint { display: none; }
+  }
+  @media (max-width: 460px) {
+    .header-title { font-size: .95rem; }
+    .header-sub { display: none; }
+    .stat-chip { padding: .2rem .4rem; min-width: 2.6rem; }
+    .hbtn { padding: .25rem .45rem; font-size: .62rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-brand">
+      <span class="header-icon">🗺️</span>
+      <div>
+        <div class="header-title">Algoritma Yolculuğu</div>
+        <div class="header-sub">5. Sınıf · Doğal Dilde Algoritma</div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip">
+        <span class="num" id="stat-score">0</span>
+        <span class="lbl">Doğru</span>
+      </div>
+      <div class="stat-chip streak" id="streak-chip">
+        <span class="num" id="stat-streak">0</span>
+        <span class="lbl">🔥 Seri</span>
+      </div>
+      <div class="stat-chip">
+        <span class="num" id="stat-timer">00:00</span>
+        <span class="lbl">⏱️ Süre</span>
+      </div>
+      <div class="stat-chip">
+        <span class="num" id="stat-city">0 <span style="opacity:.4;font-size:.8rem">/ 0</span></span>
+        <span class="lbl">Şehir</span>
+      </div>
+      <div class="stat-chip best">
+        <span class="num" id="stat-best">0</span>
+        <span class="lbl">🏆 En İyi</span>
+      </div>
+    </div>
+    <div class="header-btns">
+      <span class="icon-btn-wrap">
+        <button class="icon-btn has-uses" id="btn-hint" onclick="useHint()" title="50/50 İpucu (H)">💡<span class="uses-badge" id="hint-badge">3</span></button>
+      </span>
+      <button class="icon-btn" id="btn-sound" onclick="toggleSound()" title="Ses Aç/Kapat (M)">🔊</button>
+      <button class="hbtn hbtn-pool" onclick="openPool()">📋 Sorular</button>
+      <button class="hbtn hbtn-route" onclick="openRouteBuilder()">🛣️ Rota</button>
+      <button class="hbtn hbtn-restart" onclick="restart()">🔄 Yeniden</button>
+    </div>
+  </div>
+
+  <!-- GAME AREA -->
+  <div class="game-area">
+
+    <!-- MAP -->
+    <div class="map-wrap" id="map-wrap">
+      <svg id="map-svg" viewBox="0 0 800 440" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <g id="map-provinces"></g>
+        <g id="map-route"></g>
+        <g id="map-cities"></g>
+      </svg>
+      <!-- CAR -->
+      <div class="car" id="car">
+        <div class="car-bubble"><span class="car-bubble-inner">🚗</span></div>
+        <div class="car-shadow"></div>
+      </div>
+      <!-- PROGRESS BAR -->
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+        <span class="progress-text" id="progress-text">YOLCULUK BAŞLIYOR</span>
+      </div>
+      <!-- KEYBOARD HINT -->
+      <div class="kbd-hint">
+        <span class="kbd">1-4</span>cevap
+        <span class="kbd">H</span>ipucu
+        <span class="kbd">R</span>baştan
+      </div>
+      <!-- CONFETTI -->
+      <canvas class="confetti-canvas" id="confetti"></canvas>
+      <!-- WIN OVERLAY -->
+      <div class="win-overlay" id="win-overlay">
+        <div class="win-card">
+          <div class="win-trophy">🏆</div>
+          <div class="win-title" id="win-title">Hedefe Vardık!</div>
+          <div class="win-info" id="win-info"></div>
+          <button class="btn-win" onclick="restart()">Yeniden Yolculuğa Çık →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTION CARD -->
+    <div class="q-card" id="q-card">
+      <div class="step-strip">
+        <div class="step-city">
+          <span class="step-city-dot"></span>
+          <span id="q-leg-label">Yolculuk</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.35rem;">
+          <span class="step-badge" id="q-std"></span>
+          <span class="step-progress" id="q-num"></span>
+        </div>
+      </div>
+      <div class="q-body">
+        <!-- Algorithm topic header -->
+        <div class="algo-header">
+          <span class="algo-icon">🤖</span>
+          <span class="algo-title" id="q-topic"></span>
+        </div>
+
+        <!-- Story / context -->
+        <div class="algo-story" id="q-story"></div>
+
+        <!-- Algorithm steps panel -->
+        <div>
+          <div class="steps-label">📋 Algoritma Adımları</div>
+          <div class="algo-steps" id="algo-steps"></div>
+        </div>
+
+        <!-- Question board -->
+        <div class="q-board" id="q-board-wrap">
+          <span class="q-question-label">❓ Hangi adım eksik veya yanlış?</span>
+          <div class="q-expr" id="q-expr"></div>
+        </div>
+
+        <!-- Options -->
+        <div class="options" id="options"></div>
+
+        <!-- Feedback -->
+        <div class="feedback" id="feedback">
+          <div class="fb-row">
+            <span class="fb-emoji" id="fb-emoji"></span>
+            <div>
+              <div class="fb-title" id="fb-title"></div>
+              <div class="fb-exp" id="fb-exp"></div>
+            </div>
+          </div>
+          <button class="btn-continue" id="btn-continue" onclick="handleContinue()"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTE BUILDER PANEL -->
+    <div id="route-builder" class="rb-panel-wrap" hidden>
+      <div class="rb-panel-inner">
+        <div class="rb-title">🛣️ Rota Oluştur</div>
+        <div class="rb-instr" id="rb-instr">Haritada <b>başlangıç</b> şehrini seç</div>
+        <div class="rb-pills">
+          <div class="rb-pill">
+            <span class="rb-dot-start"></span>
+            <span class="rb-pill-label">Başlangıç</span>
+            <span class="rb-pill-val" id="rb-start-val">—</span>
+            <button class="rb-pill-clear" id="rb-clear-start">×</button>
+          </div>
+          <div class="rb-pill">
+            <span class="rb-dot-end"></span>
+            <span class="rb-pill-label">Bitiş</span>
+            <span class="rb-pill-val" id="rb-end-val">—</span>
+            <button class="rb-pill-clear" id="rb-clear-end">×</button>
+          </div>
+        </div>
+        <div class="rb-sliders">
+          <label class="rb-slider-row">
+            <span class="rb-slider-label">Ara şehir sayısı</span>
+            <div class="rb-slider-grp">
+              <input type="range" id="rb-mid" min="1" max="15" value="8">
+              <span class="rb-slider-val" id="rb-mid-val">8</span>
+            </div>
+          </label>
+        </div>
+        <div class="rb-actions">
+          <button class="btn-mini btn-cancel" onclick="closeRouteBuilder()">İptal</button>
+          <button class="btn-mini btn-save" id="rb-confirm" onclick="confirmRoute()" disabled>Rotayı Oluştur</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /game-area -->
+</div><!-- /wrap -->
+
+<!-- POOL MODAL -->
+<div class="modal-bg" id="pool-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>📋 Soru Havuzu</h2>
+      <button class="btn-close" onclick="closePool()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="pool-toolbar">
+        <span class="pool-count" id="pool-count">0 soru</span>
+        <div class="pool-actions">
+          <button class="btn-mini btn-reset" onclick="resetPool()">↺ Varsayılan</button>
+          <button class="btn-mini btn-add" onclick="openEditor(-1)">+ Yeni Soru</button>
+        </div>
+      </div>
+      <div class="pool-list" id="pool-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="modal-bg" id="editor-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="editor-title">Soru Düzenle</h2>
+      <button class="btn-close" onclick="closeEditor()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="editor-form">
+        <label>Etap (örn: Ankara → Konya)
+          <input type="text" id="ed-leg" placeholder="Şehir → Şehir">
+        </label>
+        <label>Konu Başlığı
+          <input type="text" id="ed-topic" placeholder="Örn: Bir Sayıyı Yuvarlama Algoritması">
+        </label>
+        <label>Zorluk
+          <input type="text" id="ed-standard" placeholder="Kolay / Orta / Zor">
+        </label>
+        <label>Hikaye / Bağlam
+          <textarea id="ed-story" rows="2" placeholder="Algoritmanın kullanılacağı kısa senaryo..."></textarea>
+        </label>
+        <label>Soru / Eksik Adım (büyük gösterilecek)
+          <input type="text" id="ed-expr" placeholder="Örn: 3. adım nedir?">
+        </label>
+
+        <!-- Algorithm Steps Editor -->
+        <div class="steps-editor-section">
+          <h4>🗒️ Algoritma Adımları (en az 3, en fazla 6)</h4>
+          <div class="step-edit-row"><span class="step-edit-num">1</span><input type="text" id="ed-s0" placeholder="1. adım metni..."></div>
+          <div class="step-edit-row"><span class="step-edit-num">2</span><input type="text" id="ed-s1" placeholder="2. adım metni..."></div>
+          <div class="step-edit-row"><span class="step-edit-num">3</span><input type="text" id="ed-s2" placeholder="3. adım metni..."></div>
+          <div class="step-edit-row"><span class="step-edit-num">4</span><input type="text" id="ed-s3" placeholder="4. adım (boş bırakılabilir)"></div>
+          <div class="step-edit-row"><span class="step-edit-num">5</span><input type="text" id="ed-s4" placeholder="5. adım (boş bırakılabilir)"></div>
+          <div class="step-edit-row"><span class="step-edit-num">6</span><input type="text" id="ed-s5" placeholder="6. adım (boş bırakılabilir)"></div>
+          <div style="margin-top:.5rem;font-size:.7rem;color:rgba(27,45,79,.55);font-weight:600;">💡 Doğru cevap olan adımı A şıkkı olarak işaretle; uygulamada sıra karıştırılır.<br>🔰 <b>BAŞLA</b> ve <b>BİTİR</b> adımları otomatik olarak başa ve sona eklenir.</div>
+        </div>
+
+        <div class="editor-options-section">
+          <h4>Seçenekler — doğru olanı radio ile işaretle</h4>
+          <div class="editor-opt-row"><input type="radio" name="ed-correct" value="0" id="ed-r-0"><span class="editor-opt-letter">A</span><input type="text" id="ed-opt-0" placeholder="A şıkkı (DOĞRU cevap)"></div>
+          <div class="editor-opt-row"><input type="radio" name="ed-correct" value="1" id="ed-r-1"><span class="editor-opt-letter">B</span><input type="text" id="ed-opt-1" placeholder="B şıkkı"></div>
+          <div class="editor-opt-row"><input type="radio" name="ed-correct" value="2" id="ed-r-2"><span class="editor-opt-letter">C</span><input type="text" id="ed-opt-2" placeholder="C şıkkı"></div>
+          <div class="editor-opt-row"><input type="radio" name="ed-correct" value="3" id="ed-r-3"><span class="editor-opt-letter">D</span><input type="text" id="ed-opt-3" placeholder="D şıkkı"></div>
+        </div>
+
+        <label>Açıklama (cevaptan sonra gösterilir)
+          <textarea id="ed-explanation" rows="2" placeholder="Doğru cevabın neden doğru olduğunu kısaca açıkla..."></textarea>
+        </label>
+        <div class="editor-actions">
+          <button type="button" class="btn-mini btn-cancel" onclick="closeEditor()">İptal</button>
+          <button type="button" class="btn-mini btn-save" onclick="saveQuestion()">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  MAP CONFIG
+// ═══════════════════════════════════════════════════════
+const PROVINCE_COLORS = [
+  '#AEE2FF','#B8F0D8','#FFE8B0','#FFD0C8',
+  '#D4C8FF','#C8EEFF','#D8F5C0','#FFDDAA',
+  '#FFCCCC','#D0ECFF','#CCFFEE','#FFE0B8',
+  '#E8D8FF','#C8F8E8','#FFE8CC','#D0F0FF'
+];
+
+const GEOJSON_URLS = [
+  'https://cdn.jsdelivr.net/gh/alpers/Turkey-Maps-GeoJSON@master/tr-cities.json',
+  'https://raw.githubusercontent.com/alpers/Turkey-Maps-GeoJSON/master/tr-cities.json'
+];
+
+// ═══════════════════════════════════════════════════════
+//  STOPS (default route)
+// ═══════════════════════════════════════════════════════
+let STOPS = [
+  { name:'Trabzon',  lat:41.0015, lng:39.7178, x:0, y:0 },
+  { name:'Samsun',   lat:41.2867, lng:36.3300, x:0, y:0 },
+  { name:'Ankara',   lat:39.9334, lng:32.8597, x:0, y:0 },
+  { name:'Eskişehir',lat:39.7767, lng:30.5206, x:0, y:0 },
+  { name:'İzmir',    lat:38.4237, lng:27.1428, x:0, y:0 },
+  { name:'Antalya',  lat:36.8841, lng:30.7056, x:0, y:0 }
+];
+
+// ═══════════════════════════════════════════════════════
+//  DEFAULT QUESTIONS — Doğal Dilde Algoritma (5. Sınıf)
+// ═══════════════════════════════════════════════════════
+const DEFAULT_QUESTIONS = [
+  {
+    leg:'Yol Üzerinde',
+    topic:'Okula Gitme Algoritması',
+    standard:'Kolay',
+    story:'Ayşe her sabah okula gitmek için bir algoritma uyguluyor. Aşağıdaki adımlar sırayla yazılmış ama biri eksik. Hangi adım doğru tamamlar?',
+    expression:'Hangi adım 3. sıraya gelmeli?',
+    steps:[
+      '1. Uyandığında gözlerini aç.',
+      '2. Yüzünü yıka ve dişlerini fırçala.',
+      '❓  3. Adım: ________',
+      '4. Okul çantanı hazırla.',
+      '5. Evden çık ve okula git.'
+    ],
+    options:[
+      {text:'Kahvaltını yap ve giyin.', correct:true},
+      {text:'Televizyon izle.', correct:false},
+      {text:'Arkadaşını ara.', correct:false},
+      {text:'Uyumaya devam et.', correct:false}
+    ],
+    explanation:'Algoritmalarda adımlar mantıklı bir sıra izler. Dişlerini fırçaladıktan sonra kahvaltı yapıp giyinmek, çantayı hazırlamadan önce gelir. Bu adım olmadan algoritma eksik kalır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Çay Demleme Algoritması',
+    standard:'Kolay',
+    story:'Dede her akşam çay demliyor. Ama bu sefer adımları karıştırdı! Hangi adım eksik veya yanlış yerde?',
+    expression:'Doğru sıra hangisi?',
+    steps:[
+      '1. Çaydanlığı al.',
+      '2. İçine su doldur.',
+      '3. Ocağa koy ve ısıt.',
+      '❓  4. Adım: ________',
+      '5. Çayı bardağa dök ve iç.'
+    ],
+    options:[
+      {text:'Demliği çaydanlığın üstüne koy, çay yapraklarını ekle ve demle.', correct:true},
+      {text:'Çaydanlığı buzdolabına koy.', correct:false},
+      {text:'Su yerine süt doldur.', correct:false},
+      {text:'Ocağı söndür ve bekle.', correct:false}
+    ],
+    explanation:'Çay demleme algoritmasında su kaynamadan önce demlik yerleştirilmez. 4. adımda çay yaprakları ve demleme işlemi yapılmalıdır. Algoritmalarda her adım bir öncekine bağlıdır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Kitap Okuma Algoritması',
+    standard:'Kolay',
+    story:'Mert bir kitabı okuyup anlamak istiyor. Algoritmasını yazdı ama bir adım hatalı. Hangisi?',
+    expression:'Hatalı adım hangisi?',
+    steps:[
+      '1. Okuyacağın kitabı seç.',
+      '2. Rahat bir yere otur.',
+      '3. Kitabın kapağını aç.',
+      '4. Her sayfayı dikkatlice oku.',
+      '❓  5. Adım: ________'
+    ],
+    options:[
+      {text:'Anlamadığın yerleri tekrar oku, notlar al.', correct:true},
+      {text:'Kitabı rafına geri koy okumadan.', correct:false},
+      {text:'Sadece resimlere bak.', correct:false},
+      {text:'Kitabı arkadaşına ver.', correct:false}
+    ],
+    explanation:'İyi bir okuma algoritması sadece okumakla bitmez. Son adımda anlamadıklarını tekrar okumak ve not almak, öğrenmeyi tamamlar. Algoritmaların son adımı genellikle "sonucu kontrol et" içerir!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Bozuk Para Sayma Algoritması',
+    standard:'Orta',
+    story:'Zeynep kumbarasındaki paraları saymak istiyor. Aşağıdaki algoritma adımları verilmiş, ama 3. adım yanlış. Doğru olanı bul!',
+    expression:'3. adımda ne yapılmalı?',
+    steps:[
+      '1. Tüm paraları masaya dök.',
+      '2. Paraları türlerine göre ayır (1 TL, 50 kuruş, 25 kuruş...).',
+      '❓  3. Adım: ________',
+      '4. Her gruptaki paraları say.',
+      '5. Tüm grupların toplamını hesapla.'
+    ],
+    options:[
+      {text:'Her türdeki paraları ayrı ayrı yığınlar halinde diz.', correct:true},
+      {text:'Paraları çantana geri koy.', correct:false},
+      {text:'En büyük parayı al, gerisini bırak.', correct:false},
+      {text:'Paraları karıştır ve say.', correct:false}
+    ],
+    explanation:'3. adımda her para türü kendi yığınına konulur. Bu işlem "sıralama" adımıdır. Algoritmalarda veriler gruplandırılmadan sayma işlemi yapılamaz!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'En Büyük Sayıyı Bulma Algoritması',
+    standard:'Orta',
+    story:'Bilgisayarlar en büyük sayıyı nasıl bulur? Aşağıdaki adımlar verilmiş. Hangi adım eksik?',
+    expression:'Listeden en büyüğü bul: 5, 12, 3, 8',
+    steps:[
+      '1. Listenin ilk sayısını al, buna "en büyük" de.',
+      '2. Listedeki sıradaki sayıya bak.',
+      '❓  3. Adım: ________',
+      '4. Eğer daha büyükse "en büyük"ü güncelle.',
+      '5. Liste bitene kadar 2-4 arası adımları tekrarla.',
+      '6. Son kalan "en büyük" cevabındır.'
+    ],
+    options:[
+      {text:'Bu sayıyı "en büyük" ile karşılaştır.', correct:true},
+      {text:'Bu sayıyı sil.', correct:false},
+      {text:'Tüm sayıları topla.', correct:false},
+      {text:'Listeyi baştan yaz.', correct:false}
+    ],
+    explanation:'Bu algoritma "karşılaştırmalı arama" algoritmasıdır. 3. adımda karşılaştırma yapılmadan 4. adıma geçilemez. Algoritmaların temelinde karşılaştırma ve karar verme vardır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Meyve Sıralama Algoritması',
+    standard:'Orta',
+    story:'Market kasiyeri meyveleri boyutlarına göre küçükten büyüğe sıralamak istiyor. Doğru algoritma adımı hangisi?',
+    expression:'Elmalar: büyük, küçük, orta, çok büyük',
+    steps:[
+      '1. Tüm meyveleri tezgaha diz.',
+      '2. Yanyana duran iki meyveyi karşılaştır.',
+      '❓  3. Adım: ________',
+      '4. Tüm meyve çiftleri karşılaştırılana kadar devam et.',
+      '5. İşlemi en az bir yer değiştirme olduğu sürece tekrarla.'
+    ],
+    options:[
+      {text:'Küçük olan solda, büyük olan sağda olacak şekilde yer değiştir.', correct:true},
+      {text:'Meyveleri renklerine göre ayır.', correct:false},
+      {text:'En pahalı meyveyi en öne al.', correct:false},
+      {text:'Meyveleri say ve not al.', correct:false}
+    ],
+    explanation:'Bu "kabarcık sıralama" algoritmasıdır! 3. adımda küçük olanın sola, büyük olanın sağa geçmesi sağlanır. Bu işlem sayesinde her turda en büyük meyve en sağa gider.'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Kapı Kilidi Algoritması',
+    standard:'Zor',
+    story:'Akıllı bir kapı kilidi, kapıyı açmak için şifre kontrol ediyor. Aşağıdaki adımlarda karar yapısı var. Eksik olan adım hangisi?',
+    expression:'Girilen şifre: 1234',
+    steps:[
+      '1. Kullanıcıdan şifreyi al.',
+      '2. Girilen şifreyi kayıtlı şifreyle karşılaştır.',
+      '❓  3. Adım: ________',
+      '4. EĞER doğru DEĞİLSE → "Hatalı şifre" yaz ve kilidi açma.',
+      '5. İşlemi sonlandır.'
+    ],
+    options:[
+      {text:'EĞER şifre doğruysa → kilidi aç ve "Hoş geldin" göster.', correct:true},
+      {text:'Şifreyi sil ve yeni şifre iste.', correct:false},
+      {text:'Kapıyı her durumda aç.', correct:false},
+      {text:'Kullanıcının adını sor.', correct:false}
+    ],
+    explanation:'Bu adım "koşullu ifade" (EĞER-İSE) kullanır. Algoritmalarda karar yapıları iki yol sunar: "doğruysa" ve "yanlışsa". 3. adım, doğru şifre için yapılacak işlemi belirtmelidir!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Alışveriş Listesi Algoritması',
+    standard:'Kolay',
+    story:'Anne markete gitmeden önce alışveriş listesini hazırlıyor. Adımları yazdı ama bir tanesi eksik. Hangisi olmalı?',
+    expression:'Listeyi nasıl hazırlarız?',
+    steps:[
+      '1. Evde neyin olmadığını kontrol et.',
+      '2. Eksik ürünleri not et.',
+      '❓  3. Adım: ________',
+      '4. Markete git ve listedeki ürünleri al.',
+      '5. Eve dön ve ürünleri yerleştir.'
+    ],
+    options:[
+      {text:'Listeyi gözden geçir ve öncelikli ürünleri işaretle.', correct:true},
+      {text:'Listeyi yırt ve markete git.', correct:false},
+      {text:'Komşundan ödünç al.', correct:false},
+      {text:'Tüm ürünleri internetten sipariş et.', correct:false}
+    ],
+    explanation:'3. adımda listeyi gözden geçirmek ve öncelikleri belirlemek önemlidir. Bu "doğrulama" adımıdır. İyi bir algoritma her adımın doğruluğunu kontrol eder!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Kayıp Kalemin Bulunması Algoritması',
+    standard:'Orta',
+    story:'Can sınıfta kalemini kaybetti. Bulmak için bir arama algoritması uyguluyor. Hangi adım doğru?',
+    expression:'Kalem nerede?',
+    steps:[
+      '1. Son kalemini nerede kullandığını hatırla.',
+      '2. O yeri önce ara.',
+      '❓  3. Adım: ________',
+      '4. Bulamazsan bir sonraki olası yeri ara.',
+      '5. Kalem bulunana veya tüm yerler aranana kadar devam et.'
+    ],
+    options:[
+      {text:'Eğer o yerde yoksa, "bulunamadı" olarak işaretle.', correct:true},
+      {text:'Aramayı bırak ve yeni kalem al.', correct:false},
+      {text:'Tüm yerleri aynı anda ara.', correct:false},
+      {text:'Öğretmenden yardım iste (algoritma bitsin).', correct:false}
+    ],
+    explanation:'3. adım bir "kontrol" adımıdır. Arama algoritmasında her yer arandıktan sonra "bulundu/bulunmadı" kararı verilir. Bu, döngülü algoritmaların temel mantığıdır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Diş Fırçalama Algoritması',
+    standard:'Kolay',
+    story:'Küçük Elif dişlerini fırçalamayı öğreniyor. Annesi ona bir algoritma yazdı. Bir adım eksik kalmış!',
+    expression:'Hangi adım 4. sıraya gelmeli?',
+    steps:[
+      '1. Diş fırçanı al.',
+      '2. Üzerine bir bezelye büyüklüğünde diş macunu sık.',
+      '3. Fırçayı ıslat.',
+      '❓  4. Adım: ________',
+      '5. Ağzını suyla çalkala ve fırçayı temizle.'
+    ],
+    options:[
+      {text:'Dişlerini her yönden 2 dakika boyunca fırçala.', correct:true},
+      {text:'Macunu yut.', correct:false},
+      {text:'Fırçayı çantana koy.', correct:false},
+      {text:'Aynaya bak ve gül.', correct:false}
+    ],
+    explanation:'Bu adım algoritmanın "ana eylem" adımıdır. 1-3. adımlar hazırlık, 5. adım temizlik; 4. adım asıl işlemdir. Her algoritmanın bir hedefi vardır — burada hedef, dişleri temizlemektir!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'İki Sayıyı Toplama Algoritması',
+    standard:'Orta',
+    story:'Bir hesap makinesi iki sayıyı topluyor. Adımlardan biri eksik. Hangisi olmalı?',
+    expression:'Topla: 7 + 5 = ?',
+    steps:[
+      '1. Birinci sayıyı al (A=7).',
+      '2. İkinci sayıyı al (B=5).',
+      '❓  3. Adım: ________',
+      '4. Sonucu ekrana yaz.',
+      '5. İşlemi sonlandır.'
+    ],
+    options:[
+      {text:'Toplam = A + B işlemini yap (Toplam=12).', correct:true},
+      {text:'A ile B\'yi çarp.', correct:false},
+      {text:'A\'yı sil.', correct:false},
+      {text:'Yeni bir sayı iste.', correct:false}
+    ],
+    explanation:'Algoritmaların 3 temel parçası vardır: girdi (1-2), işlem (3) ve çıktı (4). 3. adımda asıl hesaplama yapılmazsa sonuç üretilemez!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Çift mi Tek mi? Algoritması',
+    standard:'Orta',
+    story:'Bir sayının çift mi tek mi olduğunu bulan algoritma yazılıyor. Karar adımı eksik!',
+    expression:'Sayı: 14',
+    steps:[
+      '1. Bir sayı al.',
+      '2. Sayıyı 2\'ye böl ve kalanına bak.',
+      '❓  3. Adım: ________',
+      '4. EĞER kalan 1 İSE → "Tek sayı" yaz.',
+      '5. İşlemi sonlandır.'
+    ],
+    options:[
+      {text:'EĞER kalan 0 İSE → "Çift sayı" yaz.', correct:true},
+      {text:'Sayıyı 3\'e böl.', correct:false},
+      {text:'Sayıyı ekrana yazdır.', correct:false},
+      {text:'Sayıyı sil.', correct:false}
+    ],
+    explanation:'Bu bir "koşullu dallanma" algoritmasıdır. EĞER-İSE yapıları iki yol sunar; biri eksikse algoritma tüm durumları kapsamaz. Doğru algoritma her ihtimali ele almalıdır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Bilgisayarı Açma Algoritması',
+    standard:'Kolay',
+    story:'Ahmet bilgisayarını her sabah açıyor. Adımları sıraladı ama bir tanesi yanlış sırada. Hangisi 3. olmalı?',
+    expression:'Doğru sıralamayı bul!',
+    steps:[
+      '1. Bilgisayarın güç kablosunu prize tak.',
+      '2. Güç düğmesine bas.',
+      '❓  3. Adım: ________',
+      '4. Kullanıcı adını ve şifreni gir.',
+      '5. Çalışmaya başla.'
+    ],
+    options:[
+      {text:'İşletim sisteminin açılmasını bekle.', correct:true},
+      {text:'Hemen oyun aç.', correct:false},
+      {text:'Bilgisayarı kapat.', correct:false},
+      {text:'Klavyeyi söküp tak.', correct:false}
+    ],
+    explanation:'Algoritmalarda bazı adımlar "bekleme" gerektirir. Bilgisayar açılırken işletim sistemi yüklenmeden giriş yapılamaz. Sabırlı algoritmalar daha güvenilirdir!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Arkadaşa Mesaj Gönderme Algoritması',
+    standard:'Orta',
+    story:'Selin arkadaşına mesaj göndermek istiyor. Algoritmanın bir adımı eksik. Hangisi gerekli?',
+    expression:'Mesaj nasıl gönderilir?',
+    steps:[
+      '1. Mesajlaşma uygulamasını aç.',
+      '2. Arkadaşının adını rehberden seç.',
+      '3. Mesaj yazma alanına metin yaz.',
+      '❓  4. Adım: ________',
+      '5. Mesajın iletildiğine emin ol.'
+    ],
+    options:[
+      {text:'"Gönder" tuşuna bas.', correct:true},
+      {text:'Telefonu kapat.', correct:false},
+      {text:'Yeni bir uygulama indir.', correct:false},
+      {text:'Mesajı sil.', correct:false}
+    ],
+    explanation:'4. adım algoritmanın "tetikleme" adımıdır. Mesaj yazılsa bile gönder tuşuna basılmazsa iletilmez. Algoritmalarda her adım bir öncekinin sonucunu kullanır!'
+  },
+  {
+    leg:'Yol Üzerinde',
+    topic:'Sırt Çantası Toplama Algoritması',
+    standard:'Zor',
+    story:'Bir robot, öğrencinin sırt çantasını ders programına göre topluyor. Karar yapısı eksik!',
+    expression:'Yarın: Matematik, Türkçe, Beden Eğitimi',
+    steps:[
+      '1. Yarınki ders programını al.',
+      '2. Her ders için gerekli kitap ve defterleri listele.',
+      '❓  3. Adım: ________',
+      '4. Listedeki tüm eşyaları çantaya yerleştir.',
+      '5. Çantayı kapat ve hazır bırak.'
+    ],
+    options:[
+      {text:'EĞER ders Beden Eğitimi İSE → spor kıyafeti de ekle.', correct:true},
+      {text:'Tüm kitapları rastgele ata.', correct:false},
+      {text:'Çantayı boş bırak.', correct:false},
+      {text:'Ders programını yırt.', correct:false}
+    ],
+    explanation:'Bu "koşula bağlı ekleme" adımıdır. Bazı dersler özel malzeme gerektirir. İyi bir algoritma istisnaları (özel durumları) ele alır — bu sayede esnek olur!'
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'algoritmaYolculugu_v1';
+const ROUTE_KEY   = 'algoritmaYolculugu_route_v1';
+let QUESTIONS = [];
+
+function loadPool() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) { QUESTIONS = parsed; return; }
+    }
+  } catch(e) {}
+  QUESTIONS = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+}
+function savePool() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(QUESTIONS)); } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let stopIdx = 0;
+let activeQuestions = [];
+let qIdx = 0;
+let score = 0, attempts = 0;
+let shuffled = [], correctShuffledIdx = -1;
+let selected = null, answered = false, seed = 1;
+let editingIdx = -1;
+
+// New: streak, best score, hint, sound, timing
+let streak = 0;
+let maxStreakThisRun = 0;
+let bestScore = parseInt(localStorage.getItem('algoritmaYolculugu_best') || '0', 10);
+let hintsLeft = 3;
+let hintUsedThisQ = false;
+let soundOn = localStorage.getItem('algoritmaYolculugu_sound') !== 'off';
+let runStartTime = 0;
+let timerInterval = null;
+let timerPaused = false;
+let pausedElapsed = 0;
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function seededRnd(n, s) { const x = Math.sin(s*31+n*137)*10000; return x - Math.floor(x); }
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function shuffleQuestion(q, s) {
+  const opts = q.options.map((o,i) => ({...o, origIdx:i}));
+  opts.sort((a,b) => seededRnd(a.origIdx, s) - seededRnd(b.origIdx, s));
+  const ci = opts.findIndex(o => o.correct);
+  return { shuffled: opts.map(o => o.text), correctIdx: ci };
+}
+function pickActiveQuestions() {
+  const needed = Math.max(1, STOPS.length - 1);
+  if (QUESTIONS.length >= needed) {
+    activeQuestions = shuffleArray(QUESTIONS).slice(0, needed);
+  } else {
+    const sh = shuffleArray(QUESTIONS);
+    activeQuestions = [];
+    for (let i = 0; i < needed; i++) activeQuestions.push(sh[i % sh.length]);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ROUTE CONFIG
+// ═══════════════════════════════════════════════════════
+let ALL_CITIES = [];
+const DEFAULT_ROUTE_CONFIG = { start:'Trabzon', end:'Antalya', intermediate:4 };
+
+function loadRouteConfig() {
+  try {
+    const s = localStorage.getItem(ROUTE_KEY);
+    if (s) return Object.assign({}, DEFAULT_ROUTE_CONFIG, JSON.parse(s));
+  } catch(e) {}
+  return Object.assign({}, DEFAULT_ROUTE_CONFIG);
+}
+function saveRouteConfig(cfg) {
+  try { localStorage.setItem(ROUTE_KEY, JSON.stringify(cfg)); } catch(e) {}
+}
+function projectAlongLine(s, e, p) {
+  const ax = e.lng-s.lng, ay = e.lat-s.lat;
+  const bx = p.lng-s.lng, by = p.lat-s.lat;
+  const lenSq = ax*ax+ay*ay;
+  if (lenSq===0) return {t:0,d:Infinity};
+  const t = (ax*bx+ay*by)/lenSq;
+  const px2 = s.lng+ax*t, py2 = s.lat+ay*t;
+  return {t, d: Math.sqrt((p.lng-px2)**2+(p.lat-py2)**2)};
+}
+function generateRoute(startName, endName, nInter) {
+  if (!ALL_CITIES.length) return [];
+  const start = ALL_CITIES.find(c=>c.name===startName);
+  const end   = ALL_CITIES.find(c=>c.name===endName);
+  if (!start||!end||start.name===end.name) return [start||ALL_CITIES[0]];
+  const lineLen = Math.sqrt((end.lng-start.lng)**2+(end.lat-start.lat)**2);
+  const corridor = Math.max(1.2, lineLen*0.5);
+  let candidates = ALL_CITIES
+    .filter(c=>c.name!==startName&&c.name!==endName)
+    .map(c=>{const pr=projectAlongLine(start,end,c);return{...c,t:pr.t,d:pr.d};})
+    .filter(c=>c.t>0.04&&c.t<0.96&&c.d<corridor)
+    .sort((a,b)=>a.t-b.t);
+  if (candidates.length < nInter) {
+    const relaxed = ALL_CITIES.filter(c=>c.name!==startName&&c.name!==endName)
+      .map(c=>{const pr=projectAlongLine(start,end,c);return{...c,t:pr.t,d:pr.d};})
+      .filter(c=>c.t>0.04&&c.t<0.96).sort((a,b)=>a.t-b.t);
+    while (candidates.length<nInter&&relaxed.length) {
+      const nx=relaxed.shift();
+      if (!candidates.find(x=>x.name===nx.name)) candidates.push(nx);
+    }
+    candidates.sort((a,b)=>a.t-b.t);
+  }
+  const picked=[]; const used=new Set();
+  for (let i=1;i<=nInter;i++) {
+    const targetT=i/(nInter+1);
+    let best=null, bestD=Infinity;
+    candidates.forEach(c=>{
+      if (used.has(c.name)) return;
+      const d=Math.abs(c.t-targetT);
+      if (d<bestD){bestD=d;best=c;}
+    });
+    if (best){picked.push(best);used.add(best.name);}
+  }
+  return [start,...picked,end];
+}
+function applyRouteConfig() {
+  const cfg = loadRouteConfig();
+  const route = generateRoute(cfg.start, cfg.end, cfg.intermediate);
+  if (route.length < 2) return;
+  STOPS = route.map(c=>({name:c.name,lat:c.lat,lng:c.lng,x:0,y:0}));
+  STOPS.forEach(s=>{
+    const found = ALL_CITIES.find(c=>c.name===s.name);
+    if (found){s.lat=found.lat;s.lng=found.lng;}
+  });
+  // FIX: Re-pick active questions because STOPS length changed
+  pickActiveQuestions();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAP RENDERING
+// ═══════════════════════════════════════════════════════
+let projection = null;
+async function loadAndRenderMap() {
+  let geojson = null;
+  for (const url of GEOJSON_URLS) {
+    try { const r=await fetch(url); if(r.ok){geojson=await r.json();break;} } catch(e){}
+  }
+  if (!geojson) return;
+
+  const svgW=800,svgH=440;
+  const features = geojson.features||[];
+
+  let minLng=Infinity,maxLng=-Infinity,minLat=Infinity,maxLat=-Infinity;
+  features.forEach(f=>{
+    const coords=f.geometry.type==='MultiPolygon'
+      ? f.geometry.coordinates.flat(2)
+      : f.geometry.coordinates.flat(1);
+    coords.forEach(([lng,lat])=>{
+      if(lng<minLng)minLng=lng; if(lng>maxLng)maxLng=lng;
+      if(lat<minLat)minLat=lat; if(lat>maxLat)maxLat=lat;
+    });
+  });
+
+  const pad=20;
+  const scaleX=(svgW-pad*2)/(maxLng-minLng);
+  const scaleY=(svgH-pad*2)/(maxLat-minLat);
+  const scale=Math.min(scaleX,scaleY);
+  const offX=pad+(svgW-pad*2-(maxLng-minLng)*scale)/2;
+  const offY=pad+(svgH-pad*2-(maxLat-minLat)*scale)/2;
+  projection = (lng,lat)=>({
+    x: offX+(lng-minLng)*scale,
+    y: svgH-(offY+(lat-minLat)*scale)
+  });
+
+  // Extract all cities
+  ALL_CITIES = features
+    .filter(f=>f.properties&&(f.properties.name||f.properties.NAME))
+    .map(f=>{
+      const name=f.properties.name||f.properties.NAME;
+      const coords=f.geometry.type==='MultiPolygon'
+        ? f.geometry.coordinates.flat(2)
+        : f.geometry.coordinates.flat(1);
+      let slng=0,slat=0;
+      coords.forEach(([lng,lat])=>{slng+=lng;slat+=lat;});
+      return {name, lat:slat/coords.length, lng:slng/coords.length};
+    });
+
+  const NS='http://www.w3.org/2000/svg';
+  const provincesG=document.getElementById('map-provinces');
+  features.forEach((f,fi)=>{
+    const polys=f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates];
+    const color=PROVINCE_COLORS[fi%PROVINCE_COLORS.length];
+    polys.forEach(poly=>{
+      poly.forEach(ring=>{
+        const path=document.createElementNS(NS,'path');
+        const d=ring.map(([lng,lat],i)=>{
+          const p=projection(lng,lat);
+          return (i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1);
+        }).join(' ')+'Z';
+        path.setAttribute('d',d);
+        path.setAttribute('fill',color);
+        path.setAttribute('stroke','#1B2D4F');
+        path.setAttribute('stroke-width','0.5');
+        path.setAttribute('opacity','0.9');
+        provincesG.appendChild(path);
+      });
+    });
+  });
+
+  // Update STOPS coordinates
+  STOPS.forEach(s=>{
+    const found=ALL_CITIES.find(c=>c.name===s.name);
+    if(found){s.lat=found.lat;s.lng=found.lng;}
+    const p=projection(s.lng,s.lat);
+    s.x=p.x; s.y=p.y;
+  });
+}
+
+function buildRoutePath() {
+  if(!projection) return;
+  STOPS.forEach(s=>{ const p=projection(s.lng,s.lat); s.x=p.x; s.y=p.y; });
+  const NS='http://www.w3.org/2000/svg';
+  const routeG=document.getElementById('map-route');
+  routeG.innerHTML='';
+
+  if (STOPS.length<2) return;
+
+  // Outer road shadow (full route)
+  const dFull=STOPS.map((s,i)=>(i===0?'M':'L')+s.x.toFixed(1)+','+s.y.toFixed(1)).join(' ');
+  const road2=document.createElementNS(NS,'path');
+  road2.setAttribute('d',dFull);
+  road2.setAttribute('fill','none');
+  road2.setAttribute('stroke','#1B2D4F');
+  road2.setAttribute('stroke-width','5');
+  road2.setAttribute('stroke-linecap','round');
+  road2.setAttribute('opacity','0.3');
+  routeG.appendChild(road2);
+
+  // Upcoming road (yellow dashed)
+  const road=document.createElementNS(NS,'path');
+  road.setAttribute('d',dFull);
+  road.setAttribute('fill','none');
+  road.setAttribute('stroke','#FFD43B');
+  road.setAttribute('stroke-width','3');
+  road.setAttribute('stroke-dasharray','8 5');
+  road.setAttribute('stroke-linecap','round');
+  road.setAttribute('opacity','0.9');
+  routeG.appendChild(road);
+
+  // Traveled road (green solid, on top)
+  if (stopIdx > 0) {
+    const traveled = STOPS.slice(0, stopIdx + 1);
+    const dTrav = traveled.map((s,i)=>(i===0?'M':'L')+s.x.toFixed(1)+','+s.y.toFixed(1)).join(' ');
+    const trav=document.createElementNS(NS,'path');
+    trav.setAttribute('d',dTrav);
+    trav.setAttribute('fill','none');
+    trav.setAttribute('stroke','#52B788');
+    trav.setAttribute('stroke-width','4');
+    trav.setAttribute('stroke-linecap','round');
+    trav.setAttribute('opacity','0.95');
+    routeG.appendChild(trav);
+  }
+}
+
+function renderCities() {
+  const NS='http://www.w3.org/2000/svg';
+  const citiesG=document.getElementById('map-cities');
+  citiesG.innerHTML='';
+  STOPS.forEach((s,i)=>{
+    const done  = i < stopIdx;
+    const active= i === stopIdx;
+    const g=document.createElementNS(NS,'g');
+    g.style.cursor='default';
+
+    const outerR = active?12:9;
+    const outer=document.createElementNS(NS,'circle');
+    outer.setAttribute('cx',s.x); outer.setAttribute('cy',s.y);
+    outer.setAttribute('r',outerR);
+    outer.setAttribute('fill', done?'#52B788': active?'#FFD43B':'white');
+    outer.setAttribute('stroke','#1B2D4F');
+    outer.setAttribute('stroke-width','2.5');
+    if(active) { outer.setAttribute('filter','url(#glow)'); }
+    g.appendChild(outer);
+
+    // Number label inside circle
+    const num=document.createElementNS(NS,'text');
+    num.setAttribute('x',s.x); num.setAttribute('y',s.y+1);
+    num.setAttribute('text-anchor','middle');
+    num.setAttribute('dominant-baseline','middle');
+    num.setAttribute('font-size', active?'8':'7');
+    num.setAttribute('font-weight','900');
+    num.setAttribute('fill', done?'white': active?'#1B2D4F':'#1B2D4F');
+    num.setAttribute('font-family','Nunito, sans-serif');
+    num.textContent = done?'✓': String(i+1);
+    g.appendChild(num);
+
+    // City name
+    const labelY = s.y > 220 ? s.y - outerR - 5 : s.y + outerR + 12;
+    const nameTxt=document.createElementNS(NS,'text');
+    nameTxt.setAttribute('x',s.x); nameTxt.setAttribute('y',labelY);
+    nameTxt.setAttribute('text-anchor','middle');
+    nameTxt.setAttribute('font-size','7.5');
+    nameTxt.setAttribute('font-weight','800');
+    nameTxt.setAttribute('fill','#1B2D4F');
+    nameTxt.setAttribute('font-family','Nunito, sans-serif');
+
+    // Background for name
+    const bbox_approx_w = s.name.length*5;
+    const nameRect=document.createElementNS(NS,'rect');
+    nameRect.setAttribute('x',s.x-bbox_approx_w/2-2);
+    nameRect.setAttribute('y',labelY-8);
+    nameRect.setAttribute('width',bbox_approx_w+4);
+    nameRect.setAttribute('height',10);
+    nameRect.setAttribute('rx','2');
+    nameRect.setAttribute('fill', active?'#FFD43B':'rgba(255,255,255,0.85)');
+    nameRect.setAttribute('stroke','none');
+    g.appendChild(nameRect);
+    nameTxt.textContent=s.name.toUpperCase();
+    g.appendChild(nameTxt);
+    citiesG.appendChild(g);
+  });
+}
+
+function moveCar(toIdx) {
+  const s=STOPS[toIdx];
+  if(!s) return;
+  const car=document.getElementById('car');
+  const wrap=document.getElementById('map-wrap');
+  const svgW=800,svgH=440;
+  const wW=wrap.clientWidth,wH=wrap.clientHeight;
+  const scaleX=wW/svgW,scaleY=wH/svgH;
+  const scale=Math.min(scaleX,scaleY);
+  const offX=(wW-svgW*scale)/2;
+  const offY=(wH-svgH*scale)/2;
+  car.style.left=(offX+s.x*scale)+'px';
+  car.style.top =(offY+s.y*scale)+'px';
+
+  // Rotate car bubble toward next stop (or back if last)
+  const next = STOPS[toIdx+1] || STOPS[toIdx-1];
+  if (next) {
+    const dx = next.x - s.x;
+    const dy = next.y - s.y;
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    // Reverse direction if pointing backward (last stop)
+    if (toIdx === STOPS.length-1 && STOPS[toIdx-1]) angle += 180;
+    // Limit tilt for readability
+    const tilt = Math.max(-25, Math.min(25, angle * 0.3));
+    const bubble = car.querySelector('.car-bubble');
+    if (bubble) bubble.style.transform = `rotate(${tilt}deg)`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ROUTE BUILDER UI
+// ═══════════════════════════════════════════════════════
+let rbState = {start:null,end:null,mid:8};
+let rbPickMode=false;
+let rbStopsSnapshot = null;  // restore on cancel
+
+function openRouteBuilder() {
+  const cfg=loadRouteConfig();
+  rbState={start:cfg.start,end:cfg.end,mid:cfg.intermediate};
+  rbStopsSnapshot = STOPS.map(s => ({...s})); // snapshot for cancel
+  document.getElementById('rb-mid').value=rbState.mid;
+  document.getElementById('rb-mid-val').textContent=rbState.mid;
+  renderPickerDots();
+  updateRouteBuilderUI();
+  document.getElementById('q-card').setAttribute('hidden','');
+  document.getElementById('route-builder').removeAttribute('hidden');
+  rbPickMode=true;
+}
+function closeRouteBuilder() {
+  rbPickMode=false;
+  // Restore original STOPS if user cancelled (didn't confirm)
+  if (rbStopsSnapshot) {
+    STOPS = rbStopsSnapshot.map(s => ({...s}));
+    if (projection) STOPS.forEach(s=>{const p=projection(s.lng,s.lat);s.x=p.x;s.y=p.y;});
+    rbStopsSnapshot = null;
+  }
+  document.getElementById('route-builder').setAttribute('hidden','');
+  document.getElementById('q-card').removeAttribute('hidden');
+  buildRoutePath();
+  renderCities();
+  moveCar(stopIdx);
+}
+function updateRouteBuilderUI() {
+  document.getElementById('rb-start-val').textContent=rbState.start||'—';
+  document.getElementById('rb-end-val').textContent=rbState.end||'—';
+  let instr='Haritada <b>başlangıç</b> şehrini seç';
+  if(rbState.start&&!rbState.end) instr='Haritada <b>bitiş</b> şehrini seç';
+  else if(rbState.start&&rbState.end) instr='✅ Rota hazır! "Rotayı Oluştur"a bas.';
+  document.getElementById('rb-instr').innerHTML=instr;
+  document.getElementById('rb-confirm').disabled=!(rbState.start&&rbState.end);
+}
+function renderPickerDots() {
+  if(!projection) return;
+  buildRoutePath();
+  const NS='http://www.w3.org/2000/svg';
+  const cg=document.getElementById('map-cities');
+  cg.innerHTML='';
+  ALL_CITIES.forEach(c=>{
+    const p=projection(c.lng,c.lat);
+    const g=document.createElementNS(NS,'g');
+    g.style.cursor='pointer';
+    const isStart=c.name===rbState.start;
+    const isEnd=c.name===rbState.end;
+    const dot=document.createElementNS(NS,'circle');
+    dot.setAttribute('cx',p.x); dot.setAttribute('cy',p.y);
+    dot.setAttribute('r', isStart||isEnd?9:5);
+    dot.setAttribute('fill', isStart?'#52B788':isEnd?'#FF8C42':'rgba(255,255,255,0.7)');
+    dot.setAttribute('stroke','#1B2D4F'); dot.setAttribute('stroke-width','1.5');
+    g.appendChild(dot);
+    const lbl=document.createElementNS(NS,'text');
+    lbl.setAttribute('x',p.x); lbl.setAttribute('y',p.y-8);
+    lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-size','6');
+    lbl.setAttribute('font-weight','800'); lbl.setAttribute('fill','#1B2D4F');
+    lbl.setAttribute('font-family','Nunito,sans-serif');
+    lbl.textContent=c.name.toUpperCase(); g.appendChild(lbl);
+    g.addEventListener('click',()=>rbCityClick(c.name));
+    cg.appendChild(g);
+  });
+}
+function rbCityClick(name) {
+  if(!rbPickMode) return;
+  if(!rbState.start) { rbState.start=name; }
+  else if(!rbState.end) {
+    if(name===rbState.start) return;
+    rbState.end=name;
+  } else {
+    rbState.start=name; rbState.end=null;
+  }
+  if(rbState.start&&rbState.end) {
+    const mid=rbState.mid;
+    const prev=STOPS;
+    STOPS=generateRoute(rbState.start,rbState.end,mid).map(c=>({name:c.name,lat:c.lat,lng:c.lng,x:0,y:0}));
+    STOPS.forEach(s=>{const p=projection(s.lng,s.lat);s.x=p.x;s.y=p.y;});
+    buildRoutePath();
+  }
+  renderPickerDots();
+  updateRouteBuilderUI();
+}
+function confirmRoute() {
+  if(!rbState.start||!rbState.end) return;
+  const cfg={start:rbState.start,end:rbState.end,intermediate:rbState.mid};
+  saveRouteConfig(cfg);
+  rbStopsSnapshot = null;  // confirmed - don't restore
+  STOPS=generateRoute(cfg.start,cfg.end,cfg.intermediate).map(c=>({name:c.name,lat:c.lat,lng:c.lng,x:0,y:0}));
+  STOPS.forEach(s=>{const p=projection(s.lng,s.lat);s.x=p.x;s.y=p.y;});
+  stopIdx=0; qIdx=0; score=0; attempts=0; seed=1; selected=null; answered=false;
+  streak=0; maxStreakThisRun=0; hintsLeft=3; hintUsedThisQ=false;
+  pickActiveQuestions();
+  startTimer();  // Must come AFTER pickActiveQuestions
+  rbPickMode=false;
+  document.getElementById('route-builder').setAttribute('hidden','');
+  document.getElementById('q-card').removeAttribute('hidden');
+  updateStats();
+  updateProgress();
+  updateHintButton();
+  buildRoutePath();
+  renderCities();
+  moveCar(0);
+  showQuestion();
+  showToast(`🛣️ Yeni rota: ${cfg.start} → ${cfg.end}`);
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUESTION RENDERING
+// ═══════════════════════════════════════════════════════
+function renderQuestion() {
+  const q = activeQuestions[qIdx];
+  if (!q) return;
+  const sh = shuffleQuestion(q, seed + qIdx*7);
+  shuffled = sh.shuffled;
+  correctShuffledIdx = sh.correctIdx;
+
+  const fromCity = STOPS[stopIdx]?.name||'';
+  const toCity   = STOPS[stopIdx+1]?.name||'';
+  const legText  = fromCity&&toCity ? `${fromCity} → ${toCity}` : (q.leg||'Yolculuk');
+
+  document.getElementById('q-leg-label').textContent = legText.toUpperCase();
+
+  // Difficulty chip
+  const diff = q.standard||'';
+  const diffClass = diff==='Kolay'?'diff-easy':diff==='Zor'?'diff-hard':'diff-medium';
+  document.getElementById('q-std').textContent = diff;
+  document.getElementById('q-std').className = 'step-badge ' + diffClass;
+
+  document.getElementById('q-num').textContent = `Soru ${qIdx+1} / ${activeQuestions.length}`;
+  document.getElementById('q-topic').textContent = q.topic||'';
+  document.getElementById('q-story').textContent = q.story||'';
+  document.getElementById('q-expr').textContent = q.expression||'';
+
+  // Render algorithm steps
+  const stepsWrap = document.getElementById('algo-steps');
+  stepsWrap.innerHTML = '';
+  const steps = q.steps||[];
+
+  // 1) BAŞLA terminator (always first)
+  const startDiv = document.createElement('div');
+  startDiv.className = 'algo-step terminator terminator-start';
+  startDiv.style.animationDelay = '0s';
+  startDiv.innerHTML = '<span class="term-icon">▶</span><span class="term-text">BAŞLA</span>';
+  stepsWrap.appendChild(startDiv);
+
+  // 2) User-defined steps
+  steps.forEach((stepText, i) => {
+    const div = document.createElement('div');
+    const isQuestion = stepText.includes('❓');
+    div.className = 'algo-step user-step' + (isQuestion ? ' highlight' : '');
+    div.style.animationDelay = ((i+1) * 0.06) + 's';
+    div.dataset.qStepIdx = i;
+    const numSpan = document.createElement('span');
+    numSpan.className = 'step-num';
+    numSpan.textContent = isQuestion ? '?' : String(i+1);
+    const txtSpan = document.createElement('span');
+    txtSpan.className = 'step-text';
+    // Strip leading "N. " prefix to avoid duplicate numbering with badge
+    let cleanText = stepText.replace(/^\s*\d+\.\s*/, '').replace(/^❓\s*\d+\.\s*Adım:\s*/i, '').replace(/^❓\s*/, '');
+    if (isQuestion && !cleanText.trim()) cleanText = '________';
+    txtSpan.textContent = cleanText;
+    div.appendChild(numSpan);
+    div.appendChild(txtSpan);
+    stepsWrap.appendChild(div);
+  });
+
+  // 3) BİTİR terminator (always last)
+  const endDiv = document.createElement('div');
+  endDiv.className = 'algo-step terminator terminator-end';
+  endDiv.style.animationDelay = ((steps.length+1) * 0.06) + 's';
+  endDiv.innerHTML = '<span class="term-icon">■</span><span class="term-text">BİTİR</span>';
+  stepsWrap.appendChild(endDiv);
+
+  // Options
+  const optWrap = document.getElementById('options');
+  optWrap.innerHTML = '';
+  shuffled.forEach((text, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${String.fromCharCode(65+idx)}</span><span class="opt-text"></span><span class="opt-kbd">${idx+1}</span>`;
+    btn.querySelector('.opt-text').textContent = text;
+    btn.onclick = () => selectAnswer(idx);
+    optWrap.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  selected = null; answered = false;
+  hintUsedThisQ = false;
+  updateHintButton();
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  // Don't allow answering after time's up
+  if (getRemainingSeconds() === 0) return;
+  // Don't allow selecting eliminated options
+  const optBtns = document.querySelectorAll('.opt-btn');
+  if (optBtns[idx] && optBtns[idx].classList.contains('eliminated')) return;
+  answered = true; selected = idx; attempts++;
+
+  const isCorrect = idx === correctShuffledIdx;
+  let bonusEarned = 0;
+  if (isCorrect) {
+    score++;
+    streak++;
+    if (streak > maxStreakThisRun) maxStreakThisRun = streak;
+    // Bonus points for streaks (no hint used + streak >= 3)
+    if (!hintUsedThisQ && streak >= 3) {
+      bonusEarned = Math.min(streak - 2, 5);
+      score += bonusEarned;
+    }
+    playSound(streak >= 3 ? 'streak' : 'correct');
+  } else {
+    streak = 0;
+    playSound('wrong');
+  }
+  updateStats();
+  updateProgress();
+
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach((b,i) => {
+    b.disabled = true;
+    if (i===correctShuffledIdx) b.classList.add('correct');
+    else if (i===idx&&!isCorrect) b.classList.add('wrong');
+    else if (!b.classList.contains('eliminated')) b.classList.add('dimmed');
+  });
+
+  // Update steps: mark all as done, highlight the question step
+  const stepsWrap = document.getElementById('algo-steps');
+  // Only iterate user steps (skip BAŞLA/BİTİR terminators)
+  const stepDivs = stepsWrap.querySelectorAll('.algo-step.user-step');
+  const q = activeQuestions[qIdx];
+  const steps = q.steps||[];
+  stepDivs.forEach((div,i)=>{
+    if (steps[i]&&steps[i].includes('❓')) {
+      div.classList.remove('highlight');
+      div.classList.add(isCorrect?'done':'');
+      div.querySelector('.step-num').textContent = isCorrect?'✓':'?';
+      // Replace the placeholder text with the chosen answer
+      if (isCorrect) {
+        div.querySelector('.step-text').textContent = shuffled[idx];
+      }
+    }
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (isCorrect?'ok':'err');
+
+  document.getElementById('fb-emoji').textContent = isCorrect ? '🎉' : '🤔';
+  let title = isCorrect
+    ? 'Harika! Algoritmanın o adımını buldun!'
+    : 'Hmm, bu adım uymuyor. Tekrar düşün!';
+  if (bonusEarned > 0) title += ` <span class="streak-flash">+${bonusEarned} bonus 🔥</span>`;
+  document.getElementById('fb-title').innerHTML = title;
+  document.getElementById('fb-exp').textContent = q.explanation||'';
+
+  const cont = document.getElementById('btn-continue');
+  cont.textContent = isCorrect ? 'Devam et →' : '↩ Tekrar dene';
+  cont.className = 'btn-continue ' + (isCorrect?'ok':'err');
+  // Focus continue for keyboard users
+  setTimeout(()=>cont.focus(), 100);
+}
+
+function handleContinue() {
+  // If time's up, ignore continue clicks
+  if (getRemainingSeconds() === 0) return;
+  const isCorrect = selected === correctShuffledIdx;
+  hideQuestion();
+
+  if (isCorrect) {
+    setTimeout(() => {
+      stopIdx++;
+      buildRoutePath(); // redraw traveled path in green
+      renderCities();
+      moveCar(stopIdx);
+      playSound('move');
+      updateProgress();
+      if (stopIdx===STOPS.length-1) {
+        setTimeout(() => showWin(), 1400);
+      } else {
+        setTimeout(() => { qIdx++; seed+=3; showQuestion(); }, 1400);
+      }
+    }, 100);
+  } else {
+    const orig=stopIdx;
+    const back=Math.max(0,orig-1);
+    setTimeout(()=>{ stopIdx=back; buildRoutePath(); renderCities(); moveCar(back); }, 100);
+    setTimeout(()=>{ stopIdx=orig; buildRoutePath(); renderCities(); moveCar(orig); }, 1700);
+    setTimeout(()=>{ seed+=5; showQuestion(); }, 3000);
+  }
+}
+
+function hideQuestion() { document.getElementById('q-card').classList.add('hidden'); }
+function showQuestion() { renderQuestion(); document.getElementById('q-card').classList.remove('hidden'); }
+
+function showWin() {
+  pauseTimer();
+  // Guard: don't show win if game over already showing
+  if (document.getElementById('win-overlay').classList.contains('lose')) return;
+  const endCity = STOPS.length?STOPS[STOPS.length-1].name:'Hedef';
+  document.getElementById('win-title').innerHTML = `🎊 Hedefe Vardık!<br><span style="font-size:1.1rem;opacity:.95">Son Durak: ${endCity}</span>`;
+  const elapsed = getElapsedSeconds();
+  const remaining = getRemainingSeconds();
+  const min = Math.floor(elapsed/60), sec = elapsed%60;
+  const timeStr = min > 0 ? `${min} dk ${sec} sn` : `${sec} saniye`;
+  let info = `${score} puan ile algoritma yolculuğunu tamamladın!<br>`;
+  info += `📍 ${attempts} deneme · 🔥 En uzun seri: ${maxStreakThisRun} · ⏱️ ${timeStr}`;
+  if (remaining > 0) {
+    info += `<br>⚡ <strong>${remaining} saniye</strong> kazandın!`;
+  }
+
+  // Best score check
+  const isNewBest = score > bestScore;
+  if (isNewBest) {
+    bestScore = score;
+    localStorage.setItem('algoritmaYolculugu_best', String(bestScore));
+    info += `<br><br><strong style="color:#FFD43B">🏆 YENİ REKOR!</strong>`;
+    document.getElementById('stat-best').textContent = bestScore;
+  }
+  document.getElementById('win-info').innerHTML = info;
+  document.getElementById('win-overlay').classList.remove('lose');
+  document.getElementById('win-overlay').classList.add('show');
+  playSound('win');
+  fireConfetti();
+}
+
+function showGameOver() {
+  // Guard: don't show game over if won already
+  const overlay = document.getElementById('win-overlay');
+  if (overlay.classList.contains('show') && !overlay.classList.contains('lose')) return;
+  // Mark all options as disabled (freeze the question)
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  answered = true;
+
+  document.querySelector('#win-overlay .win-trophy').textContent = '⏰';
+  document.getElementById('win-title').innerHTML = `Süre Bitti!<br><span style="font-size:1.05rem;opacity:.95">Yolculuk yarıda kaldı 😔</span>`;
+  const total = Math.max(1, STOPS.length - 1);
+  let info = `${stopIdx} / ${total} şehre ulaşabildin.<br>`;
+  info += `📍 ${score} puan · 🔥 En uzun seri: ${maxStreakThisRun} · 📝 ${attempts} deneme`;
+  info += `<br><br><em style="font-size:.85rem;opacity:.85">Bir dahaki sefere daha hızlı düşün! 💪</em>`;
+  document.getElementById('win-info').innerHTML = info;
+  // Update button label
+  const btn = overlay.querySelector('.btn-win');
+  if (btn) btn.textContent = 'Tekrar Dene →';
+  overlay.classList.add('lose');
+  overlay.classList.add('show');
+  playSound('gameover');
+}
+
+function updateStats() {
+  document.getElementById('stat-score').textContent = score;
+  document.getElementById('stat-streak').textContent = streak;
+  document.getElementById('stat-best').textContent = bestScore;
+  document.getElementById('stat-city').innerHTML = `${stopIdx} <span style="opacity:.4;font-size:.8rem">/ ${STOPS.length-1}</span>`;
+  // Streak fire effect
+  document.getElementById('streak-chip').classList.toggle('fire', streak >= 3);
+}
+
+function updateProgress() {
+  const total = Math.max(1, STOPS.length - 1);
+  const pct = Math.min(100, (stopIdx / total) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  const text = stopIdx === 0
+    ? 'YOLCULUK BAŞLIYOR'
+    : stopIdx >= total
+      ? 'HEDEFE VARILDI! 🎉'
+      : `${stopIdx} / ${total} ETAP TAMAMLANDI`;
+  document.getElementById('progress-text').textContent = text;
+}
+
+function restart() {
+  stopIdx=0; qIdx=0; score=0; attempts=0; seed=1; selected=null; answered=false;
+  streak=0; maxStreakThisRun=0; hintsLeft=3; hintUsedThisQ=false;
+  pickActiveQuestions();
+  startTimer();  // Must come AFTER pickActiveQuestions so totalSeconds is correct
+  // Reset overlay (in case we came from game over)
+  const overlay = document.getElementById('win-overlay');
+  overlay.classList.remove('show');
+  overlay.classList.remove('lose');
+  document.querySelector('#win-overlay .win-trophy').textContent = '🏆';
+  const btn = overlay.querySelector('.btn-win');
+  if (btn) btn.textContent = 'Yeniden Yolculuğa Çık →';
+  updateStats();
+  updateProgress();
+  updateHintButton();
+  buildRoutePath();
+  renderCities();
+  moveCar(0);
+  showQuestion();
+  showToast(`🚗 Yolculuk başladı! Süre: ${formatTime(activeQuestions.length * SECONDS_PER_QUESTION)}`);
+}
+
+// ═══════════════════════════════════════════════════════
+//  POOL MODAL
+// ═══════════════════════════════════════════════════════
+function openPool() { renderPool(); document.getElementById('pool-modal').classList.add('show'); }
+function closePool() { document.getElementById('pool-modal').classList.remove('show'); }
+
+function renderPool() {
+  document.getElementById('pool-count').textContent = `${QUESTIONS.length} soru`;
+  const list = document.getElementById('pool-list');
+  list.innerHTML = '';
+  if (!QUESTIONS.length) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(27,45,79,.45);font-style:italic;">Havuz boş. "+ Yeni Soru" ile ekle.</div>';
+    return;
+  }
+  QUESTIONS.forEach((q,i) => {
+    const item=document.createElement('div');
+    item.className='pool-item';
+    const info=document.createElement('div'); info.className='pool-item-info';
+    const topic=document.createElement('div'); topic.className='pool-item-topic';
+    topic.textContent=`${i+1}. ${q.topic||'(başlıksız)'}`;
+    const steps=document.createElement('div'); steps.className='pool-item-steps';
+    steps.textContent = `${(q.steps||[]).length} algoritma adımı`;
+    const diff=document.createElement('div'); diff.className='pool-item-diff';
+    diff.textContent=q.standard||'';
+    info.appendChild(topic); info.appendChild(steps); info.appendChild(diff);
+
+    const actions=document.createElement('div');
+    const editBtn=document.createElement('button');
+    editBtn.className='btn-edit'; editBtn.textContent='Düzenle';
+    editBtn.onclick=()=>openEditor(i);
+    const delBtn=document.createElement('button');
+    delBtn.className='btn-delete'; delBtn.textContent='Sil';
+    delBtn.onclick=()=>deleteQuestion(i);
+    actions.appendChild(editBtn); actions.appendChild(delBtn);
+    item.appendChild(info); item.appendChild(actions);
+    list.appendChild(item);
+  });
+}
+
+function deleteQuestion(i) {
+  const q=QUESTIONS[i];
+  if (!confirm(`"${q.topic||'Bu soru'}" silinsin mi?`)) return;
+  QUESTIONS.splice(i,1); savePool(); renderPool();
+}
+function resetPool() {
+  if (!confirm('Tüm sorular varsayılan 9 soruya dönsün mü?')) return;
+  QUESTIONS=JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+  savePool(); renderPool();
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDITOR MODAL
+// ═══════════════════════════════════════════════════════
+function openEditor(idx) {
+  editingIdx=idx;
+  const isNew=idx===-1;
+  document.getElementById('editor-title').textContent = isNew?'Yeni Soru Ekle':'Soru Düzenle';
+  const q=isNew
+    ? {leg:'',topic:'',standard:'Kolay',story:'',expression:'',steps:['','','','','',''],
+       options:[{text:'',correct:true},{text:'',correct:false},{text:'',correct:false},{text:'',correct:false}],explanation:''}
+    : QUESTIONS[idx];
+
+  document.getElementById('ed-leg').value=q.leg||'';
+  document.getElementById('ed-topic').value=q.topic||'';
+  document.getElementById('ed-standard').value=q.standard||'Kolay';
+  document.getElementById('ed-story').value=q.story||'';
+  document.getElementById('ed-expr').value=q.expression||'';
+  document.getElementById('ed-explanation').value=q.explanation||'';
+
+  const steps=q.steps||[];
+  for (let i=0;i<6;i++) {
+    document.getElementById('ed-s'+i).value=steps[i]||'';
+  }
+  for (let i=0;i<4;i++) {
+    const opt=q.options[i]||{text:'',correct:false};
+    document.getElementById('ed-opt-'+i).value=opt.text||'';
+    document.getElementById('ed-r-'+i).checked=!!opt.correct;
+  }
+  document.getElementById('editor-modal').classList.add('show');
+}
+function closeEditor() { document.getElementById('editor-modal').classList.remove('show'); }
+function saveQuestion() {
+  const topic=document.getElementById('ed-topic').value.trim();
+  const expression=document.getElementById('ed-expr').value.trim();
+  const story=document.getElementById('ed-story').value.trim();
+  const steps=[];
+  for (let i=0;i<6;i++) {
+    const v=document.getElementById('ed-s'+i).value.trim();
+    if(v) steps.push(v);
+  }
+  const opts=[];
+  let correctIdx=-1;
+  for (let i=0;i<4;i++) {
+    const text=document.getElementById('ed-opt-'+i).value.trim();
+    const isCorrect=document.getElementById('ed-r-'+i).checked;
+    opts.push({text,correct:isCorrect});
+    if(isCorrect) correctIdx=i;
+  }
+  if (!topic) return alert('Lütfen bir konu başlığı girin.');
+  if (steps.length<3) return alert('Lütfen en az 3 algoritma adımı girin.');
+  if (opts.some(o=>!o.text)) return alert('Lütfen 4 seçeneği doldurun.');
+  if (correctIdx===-1) return alert('Lütfen doğru seçeneği işaretleyin.');
+
+  const q={
+    leg:document.getElementById('ed-leg').value.trim()||'Yol Üzerinde',
+    topic,
+    standard:document.getElementById('ed-standard').value.trim()||'Orta',
+    story,expression,steps,options:opts,
+    explanation:document.getElementById('ed-explanation').value.trim()
+  };
+  if (editingIdx===-1) QUESTIONS.push(q);
+  else QUESTIONS[editingIdx]=q;
+  savePool(); closeEditor(); renderPool();
+}
+
+// Close modals on bg click
+document.getElementById('pool-modal').addEventListener('click',e=>{if(e.target.id==='pool-modal')closePool();});
+document.getElementById('editor-modal').addEventListener('click',e=>{if(e.target.id==='editor-modal')closeEditor();});
+
+// Route builder slider
+document.getElementById('rb-mid').addEventListener('input',e=>{
+  document.getElementById('rb-mid-val').textContent=e.target.value;
+  rbState.mid=parseInt(e.target.value,10);
+  if(rbState.start&&rbState.end) renderPickerDots();
+});
+document.getElementById('rb-clear-start').addEventListener('click',()=>{
+  rbState.start=rbState.end; rbState.end=null;
+  renderPickerDots(); updateRouteBuilderUI();
+});
+document.getElementById('rb-clear-end').addEventListener('click',()=>{
+  rbState.end=null;
+  renderPickerDots(); updateRouteBuilderUI();
+});
+
+// ═══════════════════════════════════════════════════════
+//  TIMER (countdown — 60 sec per question)
+// ═══════════════════════════════════════════════════════
+const SECONDS_PER_QUESTION = 60;
+let timerTotalSeconds = 0;
+
+function getElapsedSeconds() {
+  if (!runStartTime) return 0;
+  if (timerPaused) return pausedElapsed;
+  return Math.floor((Date.now() - runStartTime) / 1000);
+}
+function getRemainingSeconds() {
+  return Math.max(0, timerTotalSeconds - getElapsedSeconds());
+}
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function updateTimer() {
+  const el = document.getElementById('stat-timer');
+  if (!el) return;
+  const remaining = getRemainingSeconds();
+  el.textContent = formatTime(remaining);
+  // Visual states based on time pressure
+  const chip = el.closest('.stat-chip');
+  if (chip) {
+    chip.classList.toggle('timer-warn',   remaining > 15 && remaining <= 30);
+    chip.classList.toggle('timer-danger', remaining > 0  && remaining <= 15);
+  }
+  // Tick sound at last 5 seconds
+  if (remaining > 0 && remaining <= 5 && !timerPaused) {
+    playSound('tick');
+  }
+  // Game over
+  if (remaining === 0 && !timerPaused) {
+    pauseTimer();
+    showGameOver();
+  }
+}
+function startTimer() {
+  stopTimer();
+  timerTotalSeconds = (activeQuestions.length || 1) * SECONDS_PER_QUESTION;
+  runStartTime = Date.now();
+  timerPaused = false;
+  pausedElapsed = 0;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+function pauseTimer() {
+  if (timerPaused || !runStartTime) return;
+  pausedElapsed = Math.floor((Date.now() - runStartTime) / 1000);
+  timerPaused = true;
+  stopTimer();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SOUND EFFECTS (Web Audio API)
+// ═══════════════════════════════════════════════════════
+let audioCtx = null;
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, duration, type='sine', volume=0.15, when=0) {
+  if (!soundOn) return;
+  const ctx = ensureAudioCtx();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(volume, t0 + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration);
+}
+function playSound(kind) {
+  if (!soundOn) return;
+  switch(kind) {
+    case 'correct':
+      playTone(523.25, 0.12, 'sine', 0.18);
+      playTone(659.25, 0.18, 'sine', 0.16, 0.1);
+      break;
+    case 'streak':
+      playTone(523.25, 0.1, 'triangle', 0.18);
+      playTone(659.25, 0.1, 'triangle', 0.18, 0.08);
+      playTone(783.99, 0.18, 'triangle', 0.18, 0.16);
+      break;
+    case 'wrong':
+      playTone(220, 0.12, 'sawtooth', 0.12);
+      playTone(180, 0.18, 'sawtooth', 0.10, 0.1);
+      break;
+    case 'win':
+      [523.25, 659.25, 783.99, 1046.50].forEach((f,i) =>
+        playTone(f, 0.22, 'triangle', 0.18, i * 0.13));
+      break;
+    case 'move':
+      playTone(440, 0.08, 'sine', 0.10);
+      break;
+    case 'hint':
+      playTone(880, 0.08, 'square', 0.08);
+      playTone(1100, 0.1, 'square', 0.08, 0.07);
+      break;
+    case 'click':
+      playTone(660, 0.04, 'square', 0.06);
+      break;
+    case 'tick':
+      playTone(880, 0.04, 'square', 0.08);
+      break;
+    case 'gameover':
+      playTone(220, 0.2, 'sawtooth', 0.15);
+      playTone(180, 0.25, 'sawtooth', 0.13, 0.18);
+      playTone(140, 0.4, 'sawtooth', 0.12, 0.4);
+      break;
+  }
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  localStorage.setItem('algoritmaYolculugu_sound', soundOn ? 'on' : 'off');
+  document.getElementById('btn-sound').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) { ensureAudioCtx(); playSound('click'); }
+  showToast(soundOn ? '🔊 Ses açık' : '🔇 Ses kapalı');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HINT (50/50)
+// ═══════════════════════════════════════════════════════
+function useHint() {
+  if (answered || hintsLeft <= 0 || hintUsedThisQ) {
+    showToast(hintsLeft <= 0 ? '❌ İpucu hakkın kalmadı!' : '⚠️ Bu soruda ipucu zaten kullanıldı.');
+    return;
+  }
+  // Find 2 wrong options to eliminate
+  const wrongIndices = [];
+  for (let i = 0; i < shuffled.length; i++) {
+    if (i !== correctShuffledIdx) wrongIndices.push(i);
+  }
+  // Shuffle and take 2
+  for (let i = wrongIndices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [wrongIndices[i], wrongIndices[j]] = [wrongIndices[j], wrongIndices[i]];
+  }
+  const toEliminate = wrongIndices.slice(0, 2);
+  const btns = document.querySelectorAll('.opt-btn');
+  toEliminate.forEach(i => {
+    if (btns[i]) btns[i].classList.add('eliminated');
+  });
+  hintsLeft--;
+  hintUsedThisQ = true;
+  updateHintButton();
+  playSound('hint');
+  showToast(`💡 2 yanlış şık elendi! Kalan ipucu: ${hintsLeft}`);
+}
+function updateHintButton() {
+  const btn = document.getElementById('btn-hint');
+  const badge = document.getElementById('hint-badge');
+  badge.textContent = hintsLeft;
+  btn.disabled = hintsLeft <= 0 || answered || hintUsedThisQ;
+  btn.classList.toggle('has-uses', hintsLeft > 0);
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+let toastTimeout = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════════
+function fireConfetti() {
+  const canvas = document.getElementById('confetti');
+  const wrap = document.getElementById('map-wrap');
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#FFD43B', '#FF8C42', '#52B788', '#E63946', '#4361EE', '#7B2FBE'];
+  const particles = [];
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: canvas.width/2 + (Math.random()-0.5)*100,
+      y: canvas.height/2,
+      vx: (Math.random()-0.5) * 12,
+      vy: -Math.random() * 14 - 4,
+      g: 0.35,
+      size: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vRot: (Math.random()-0.5) * 0.3,
+      life: 1
+    });
+  }
+  let frame = 0;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = 0;
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive++;
+      p.vy += p.g;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vRot;
+      if (frame > 80) p.life -= 0.02;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    frame++;
+    if (alive > 0 && frame < 200) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  tick();
+}
+
+// ═══════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  // Don't intercept when user types in inputs/textareas
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  // Skip if any modal is open
+  const modalOpen = document.querySelector('.modal-bg.show');
+  if (modalOpen) return;
+
+  const key = e.key.toLowerCase();
+
+  // Continue / win overlay / game over
+  if (e.key === 'Enter' || e.key === ' ') {
+    const overlayShown = document.getElementById('win-overlay').classList.contains('show');
+    if (overlayShown) { e.preventDefault(); restart(); return; }
+    const fb = document.getElementById('feedback');
+    if (fb.classList.contains('show')) { e.preventDefault(); handleContinue(); return; }
+  }
+
+  // Answer selection 1-4 or A-D
+  if (!answered) {
+    let idx = -1;
+    if (e.key >= '1' && e.key <= '4') idx = parseInt(e.key, 10) - 1;
+    else if (key >= 'a' && key <= 'd') idx = key.charCodeAt(0) - 'a'.charCodeAt(0);
+    if (idx >= 0 && idx < shuffled.length) {
+      e.preventDefault();
+      selectAnswer(idx);
+      return;
+    }
+  }
+
+  // R = restart, H = hint, M = mute
+  if (key === 'r') { e.preventDefault(); restart(); }
+  else if (key === 'h') { e.preventDefault(); useHint(); }
+  else if (key === 'm') { e.preventDefault(); toggleSound(); }
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadPool();
+pickActiveQuestions();
+startTimer();  // Must come AFTER pickActiveQuestions
+
+// Initial state UI (before map loads)
+document.getElementById('btn-sound').textContent = soundOn ? '🔊' : '🔇';
+updateStats();
+updateProgress();
+updateHintButton();
+
+(async () => {
+  await loadAndRenderMap();
+  applyRouteConfig();   // This now also calls pickActiveQuestions()
+  // Restart timer with potentially new question count after map loads
+  startTimer();
+  buildRoutePath();
+  renderCities();
+  moveCar(0);
+  // Render question AFTER map is ready so leg labels show correct city names
+  renderQuestion();
+  updateStats();
+  updateProgress();
+})();
+
+window.addEventListener('resize', ()=>{
+  if(typeof stopIdx!=='undefined'&&STOPS.length) moveCar(stopIdx);
+});
+
+// Pause timer when tab is hidden, resume when visible (don't penalize away time)
+document.addEventListener('visibilitychange', () => {
+  const isWin = document.getElementById('win-overlay').classList.contains('show');
+  if (isWin) return; // already paused
+  if (document.hidden) {
+    pauseTimer();
+  } else if (timerPaused) {
+    // Resume: shift runStartTime so elapsed continues from pausedElapsed
+    runStartTime = Date.now() - pausedElapsed * 1000;
+    timerPaused = false;
+    if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+  }
+});
+</script>
+
+<!-- Background music -->
+<audio id="bg-music-portal" loop autoplay style="display:none">
+  <source src="party-tonight.mp3" type="audio/mpeg">
+</audio>
+<style>
+#music-bar{
+  position:fixed;bottom:1rem;right:1rem;z-index:9999;
+  display:flex;align-items:center;gap:.5rem;
+  background:rgba(27,45,79,.92);
+  border:2px solid #FFD43B;border-radius:2rem;
+  padding:.4rem .8rem;backdrop-filter:blur(6px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  font-family:'Nunito',sans-serif;
+}
+#music-bar-icon{font-size:1.1rem;animation:spin2 2s linear infinite;}
+@keyframes spin2{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+#music-bar.paused #music-bar-icon{animation-play-state:paused;}
+#music-bar-label{font-size:.68rem;font-weight:800;color:rgba(255,212,59,.85);white-space:nowrap;}
+#music-bar-btn{
+  background:#FFD43B;color:#1B2D4F;border:1.5px solid #1B2D4F;
+  border-radius:50%;width:1.5rem;height:1.5rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;cursor:pointer;font-weight:900;font-family:inherit;
+}
+</style>
+<div id="music-bar">
+  <span id="music-bar-icon">🎵</span>
+  <span id="music-bar-label">Party Tonight</span>
+  <button id="music-bar-btn" onclick="toggleBgMusic()">⏸</button>
+</div>
+<script>
+var _bgPlaying = true;
+function toggleBgMusic(){
+  var a = document.getElementById('bg-music-portal');
+  var bar = document.getElementById('music-bar');
+  var btn = document.getElementById('music-bar-btn');
+  if(_bgPlaying){a.pause();_bgPlaying=false;btn.textContent='▶';bar.classList.add('paused');}
+  else{a.play();_bgPlaying=true;btn.textContent='⏸';bar.classList.remove('paused');}
+}
+// Try to start on first user interaction if autoplay blocked
+document.addEventListener('click',function startOnce(){
+  var a=document.getElementById('bg-music-portal');
+  if(a.paused&&_bgPlaying){a.play();}
+  document.removeEventListener('click',startOnce);
+},{once:true});
+</script>
+
+</body>
+</html>

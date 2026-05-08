@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kurt, Kuzu ve Ot · Nehri Geçiş Bulmacası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=JetBrains+Mono:wght@500;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky-1: #fef3d7;
+    --sky-2: #f5e0b3;
+    --hill: #c8d8a3;
+    --grass-1: #b3cd87;
+    --grass-2: #7ba05b;
+    --grass-3: #4f6b38;
+    --river-1: #6fa8c7;
+    --river-2: #2c6a8f;
+    --river-deep: #1d4e6e;
+    --wood: #a06b46;
+    --wood-dark: #6b4226;
+    --paper: #fdf6e3;
+    --paper-2: #f5ecd1;
+    --ink: #2a1d10;
+    --accent: #c84b31;
+    --accent-2: #e89c3a;
+    --win: #6fa84a;
+    --lose: #c84b31;
+  }
+
+  html, body { min-height: 100%; }
+
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 0%, #fff5d6 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 10%, #ffe8b8 0%, transparent 45%),
+      linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 45%, var(--hill) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 20px 14px 40px;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .game-container { max-width: 920px; margin: 0 auto; }
+
+  /* ── Header ─────────────────────────────────────── */
+  header { text-align: center; margin-bottom: 20px; }
+
+  .eyebrow {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--wood-dark);
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(1.9rem, 6vw, 3rem);
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+  }
+
+  h1 .ampersand {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--wood-dark);
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: var(--paper);
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+  .stat span { color: var(--accent); }
+
+  /* ── Buttons ────────────────────────────────────── */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: 2.5px solid var(--ink);
+    background: var(--paper);
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    font-weight: 800;
+  }
+  button:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  button:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ── Scene ──────────────────────────────────────── */
+  .scene {
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 7px 7px 0 var(--ink);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .banks-row {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr 1fr;
+    min-height: 320px;
+    position: relative;
+  }
+
+  .bank {
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.15) 0%, transparent 60%),
+      linear-gradient(180deg, var(--grass-1) 0%, var(--grass-2) 55%, var(--grass-3) 100%);
+    padding: 14px 8px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+  }
+
+  /* tufts of grass at bottom */
+  .bank::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background:
+      radial-gradient(circle at 10% 100%, var(--grass-3) 0 3px, transparent 3px),
+      radial-gradient(circle at 30% 100%, var(--grass-3) 0 4px, transparent 4px),
+      radial-gradient(circle at 55% 100%, var(--grass-3) 0 3px, transparent 3px),
+      radial-gradient(circle at 78% 100%, var(--grass-3) 0 4px, transparent 4px),
+      radial-gradient(circle at 95% 100%, var(--grass-3) 0 3px, transparent 3px);
+  }
+
+  .bank-label {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(0,0,0,0.55);
+    width: 100%;
+    text-align: center;
+    padding: 4px 6px;
+    background: rgba(253, 246, 227, 0.5);
+    border-radius: 4px;
+  }
+
+  .entities-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 8px;
+    justify-content: center;
+    width: 100%;
+    padding: 8px 4px 0;
+    min-height: 80px;
+  }
+
+  /* ── River ──────────────────────────────────────── */
+  .river {
+    background:
+      repeating-linear-gradient(105deg, transparent 0, transparent 12px, rgba(255,255,255,0.10) 12px, rgba(255,255,255,0.10) 14px),
+      linear-gradient(180deg, var(--river-1) 0%, var(--river-2) 60%, var(--river-deep) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sun {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-size: 2rem;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    animation: sun-pulse 5s ease-in-out infinite;
+  }
+  @keyframes sun-pulse {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(8deg) scale(1.08); }
+  }
+
+  .wave {
+    position: absolute;
+    color: rgba(255,255,255,0.35);
+    font-size: 1rem;
+    font-weight: 900;
+    animation: wave 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes wave {
+    0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.4; }
+    50% { transform: translateY(-3px) scaleX(1.2); opacity: 0.7; }
+  }
+
+  .boat-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    height: 100px;
+  }
+
+  .boat {
+    position: absolute;
+    width: 150px;
+    height: 100px;
+    transition: left 1.3s cubic-bezier(0.65, 0.0, 0.35, 1);
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,0.15));
+  }
+  .boat[data-side="left"] { left: 4px; }
+  .boat[data-side="right"] { left: calc(100% - 154px); }
+  .boat.crossing .boat-body { animation: rock 0.6s ease-in-out infinite; }
+  @keyframes rock {
+    0%, 100% { transform: rotate(-1deg); }
+    50% { transform: rotate(1deg); }
+  }
+
+  .boat-body {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: linear-gradient(180deg, var(--wood) 0%, var(--wood-dark) 100%);
+    border: 2.5px solid var(--ink);
+    border-radius: 6px 6px 50% 50% / 6px 6px 100% 100%;
+    transform-origin: 50% 100%;
+  }
+  .boat-body::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 2px;
+  }
+
+  .boat-deck {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .boat-slot {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Entities ───────────────────────────────────── */
+  .entity {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.9rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 2px 2px 0 var(--ink);
+    user-select: none;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .entity:hover {
+    transform: translate(-1px, -2px) scale(1.08) rotate(-3deg);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .entity:active { transform: scale(0.93); }
+  .entity.in-boat {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .entity.spawn { animation: pop 0.35s ease-out; }
+  @keyframes pop {
+    0% { transform: scale(0) rotate(-180deg); }
+    60% { transform: scale(1.15) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .entity-label {
+    position: absolute;
+    bottom: -19px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    letter-spacing: 0.03em;
+  }
+  .entity.in-boat .entity-label { display: none; }
+
+  /* ── Controls ───────────────────────────────────── */
+  .controls {
+    background: var(--paper-2);
+    padding: 14px;
+    border-top: 3px solid var(--ink);
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-cross {
+    padding: 13px 26px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
+  .btn-cross:not(:disabled) {
+    background: linear-gradient(180deg, #d65a40 0%, var(--accent) 100%);
+  }
+
+  .btn-reset {
+    padding: 13px 22px;
+    border-radius: 999px;
+    background: var(--paper);
+    font-size: 0.95rem;
+  }
+
+  /* ── Message ────────────────────────────────────── */
+  .message {
+    text-align: center;
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 var(--ink);
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-height: 24px;
+    transition: background 0.3s;
+  }
+  .message.win { background: #d8efb8; color: #2d4a1e; }
+  .message.lose { background: #f5c8b8; color: #6b2418; }
+
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+  }
+
+  .celebrate { animation: bounce 0.7s ease-in-out; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-18px) rotate(-8deg); }
+    50% { transform: translateY(-12px) rotate(8deg); }
+    75% { transform: translateY(-6px) rotate(-4deg); }
+  }
+
+  /* ── Rules ──────────────────────────────────────── */
+  .rules {
+    margin-top: 22px;
+    background: var(--paper);
+    border: 2.5px dashed var(--ink);
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: 4px 4px 0 rgba(42, 29, 16, 0.15);
+  }
+  .rules h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rules ul { list-style: none; padding: 0; }
+  .rules li {
+    padding: 5px 0;
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .rules li::before {
+    content: "▸ ";
+    color: var(--accent);
+    font-weight: 900;
+    margin-right: 4px;
+  }
+  .rules strong { color: var(--accent); }
+
+  /* ── Confetti for win ───────────────────────────── */
+  .confetti {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 14px;
+    z-index: 1000;
+    pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
+
+  /* ── Algorithm Log Panel ────────────────────────── */
+  .algorithm-panel {
+    margin-top: 22px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 var(--ink);
+    overflow: hidden;
+  }
+
+  .algo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--paper-2);
+    border-bottom: 2.5px solid var(--ink);
+  }
+
+  .algo-header h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .algo-header .step-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--wood-dark);
+    background: var(--paper);
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+  }
+
+  .btn-clear-log {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    background: var(--paper);
+    border-width: 2px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .algo-log {
+    list-style: none;
+    padding: 4px 0;
+    max-height: 280px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  .algo-log:empty::after {
+    content: 'Henüz adım yok. Bir varlığa tıkla, algoritman buradan akmaya başlasın.';
+    display: block;
+    padding: 28px 22px;
+    text-align: center;
+    color: var(--wood-dark);
+    font-style: italic;
+    font-size: 0.88rem;
+    opacity: 0.7;
+  }
+
+  .algo-step {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px dashed rgba(42, 29, 16, 0.18);
+    animation: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .algo-step:last-child { border-bottom: none; }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .algo-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    border: 2px solid var(--ink);
+  }
+  .algo-step.load   .algo-num { background: var(--grass-3); }
+  .algo-step.unload .algo-num { background: var(--accent-2); color: var(--ink); }
+  .algo-step.cross  .algo-num { background: var(--river-2); }
+  .algo-step.win    .algo-num { background: var(--win); }
+  .algo-step.lose   .algo-num { background: var(--lose); }
+
+  .algo-text {
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .algo-code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--paper-2);
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(42, 29, 16, 0.25);
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .algo-step.cross  .algo-code { color: var(--river-2); }
+  .algo-step.unload .algo-code { color: #a06b18; }
+  .algo-step.load   .algo-code { color: var(--grass-3); }
+  .algo-step.win    .algo-code { color: var(--win); }
+  .algo-step.lose   .algo-code { color: var(--lose); }
+
+  /* ── Mobile ─────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .banks-row {
+      grid-template-columns: 0.95fr 1.4fr 0.95fr;
+      min-height: 280px;
+    }
+    .bank { padding: 10px 4px 24px; gap: 10px; }
+    .bank-label { font-size: 0.65rem; letter-spacing: 0.12em; }
+    .entity { width: 48px; height: 48px; font-size: 1.5rem; }
+    .entity.in-boat { width: 38px; height: 38px; font-size: 1.15rem; }
+    .entities-row { gap: 8px 6px; min-height: 64px; }
+    .boat { width: 110px; height: 80px; }
+    .boat[data-side="right"] { left: calc(100% - 114px); }
+    .boat-slot { width: 46px; height: 46px; }
+    .boat-deck { bottom: 26px; height: 50px; }
+    .boat-body { height: 26px; }
+    .entity-label { font-size: 0.58rem; padding: 1px 5px; bottom: -16px; }
+    .btn-cross { padding: 11px 22px; font-size: 0.95rem; }
+    .btn-reset { padding: 11px 18px; font-size: 0.9rem; }
+    .sun { font-size: 1.6rem; top: 8px; right: 10px; }
+
+    .algo-step {
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto;
+      padding: 9px 14px;
+    }
+    .algo-code {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: start;
+      margin-top: 3px;
+      font-size: 0.68rem;
+    }
+    .algo-text { font-size: 0.88rem; }
+    .algo-header h3 { font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body>
+<div class="game-container">
+
+  <header>
+    <div class="eyebrow">— bir mantık bulmacası —</div>
+    <h1>Kurt, Kuzu <span class="ampersand">&amp;</span> Ot</h1>
+    <p class="subtitle">Üçünü de karşıya geçirebilir misin?</p>
+    <div class="stats">
+      <div class="stat">Hamle: <span id="moves">0</span></div>
+      <div class="stat">Geçiş: <span id="crossings">0</span></div>
+      <div class="stat">En az: <span>7</span> geçiş</div>
+    </div>
+  </header>
+
+  <div class="scene">
+    <div class="banks-row">
+      <div class="bank" id="left-bank">
+        <div class="bank-label">Sol Yaka</div>
+        <div class="entities-row" id="left-entities"></div>
+      </div>
+
+      <div class="river">
+        <span class="sun">☀️</span>
+        <span class="wave" style="top: 18%; left: 18%;">〜</span>
+        <span class="wave" style="top: 72%; left: 58%; animation-delay: 1s;">〜</span>
+        <span class="wave" style="top: 35%; left: 70%; animation-delay: 1.6s;">〜</span>
+        <span class="wave" style="top: 85%; left: 22%; animation-delay: 2.2s;">〜</span>
+        <div class="boat-track">
+          <div class="boat" id="boat" data-side="left">
+            <div class="boat-deck" id="boat-deck"></div>
+            <div class="boat-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bank" id="right-bank">
+        <div class="bank-label">Sağ Yaka</div>
+        <div class="entities-row" id="right-entities"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-cross" id="cross-btn">⛵ Nehri Geç</button>
+      <button class="btn-reset" id="reset-btn">↺ Yeniden Başla</button>
+    </div>
+  </div>
+
+  <div class="message" id="message">
+    Çiftçiyi ve bir varlığı kayığa koy, sonra <strong>Nehri Geç</strong>'e bas.
+  </div>
+
+  <div class="algorithm-panel">
+    <div class="algo-header">
+      <h3>📝 Algoritma Defteri <span class="step-count" id="step-count">0 adım</span></h3>
+      <button class="btn-clear-log" id="clear-log-btn">↺ Temizle</button>
+    </div>
+    <ol class="algo-log" id="algo-log"></ol>
+  </div>
+
+  <div class="rules">
+    <h3>📜 Kurallar</h3>
+    <ul>
+      <li>Çiftçi, kurt + kuzu + otu sağ yakaya geçirmek istiyor.</li>
+      <li>Kayığa <strong>çiftçi</strong> ve en fazla <strong>bir varlık</strong> daha sığar.</li>
+      <li>Çiftçi yokken <strong>kurt + kuzu</strong> kalırsa kurt kuzuyu yer. 🐺</li>
+      <li>Çiftçi yokken <strong>kuzu + ot</strong> kalırsa kuzu otu yer. 🐑</li>
+      <li>Hedef: Üçünü de en az hamleyle sağ yakaya geçir.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const ENTITIES = {
+    farmer: { emoji: '🧑‍🌾', name: 'Çiftçi', acc: "Çiftçi'yi" },
+    wolf:   { emoji: '🐺',   name: 'Kurt',   acc: "Kurt'u"   },
+    sheep:  { emoji: '🐑',   name: 'Kuzu',   acc: "Kuzu'yu"  },
+    grass:  { emoji: '🌿',   name: 'Ot',     acc: "Ot'u"     }
+  };
+
+  const ENTITY_ORDER = ['farmer', 'wolf', 'sheep', 'grass'];
+
+  let state;
+  let stepCounter = 0;
+
+  function initState() {
+    state = {
+      left: new Set(['farmer', 'wolf', 'sheep', 'grass']),
+      right: new Set(),
+      boat: [],          // ordered list to preserve slot position
+      boatSide: 'left',
+      moves: 0,
+      crossings: 0,
+      gameOver: false,
+      gameWon: false,
+      animating: false
+    };
+  }
+
+  function logStep(text, code, type) {
+    stepCounter++;
+    const log = document.getElementById('algo-log');
+    const li = document.createElement('li');
+    li.className = 'algo-step ' + type;
+    li.innerHTML = `
+      <span class="algo-num">${stepCounter}</span>
+      <span class="algo-text">${text}</span>
+      <span class="algo-code">${code}</span>
+    `;
+    log.appendChild(li);
+    log.scrollTop = log.scrollHeight;
+    document.getElementById('step-count').textContent = stepCounter + ' adım';
+  }
+
+  function clearLog() {
+    stepCounter = 0;
+    document.getElementById('algo-log').innerHTML = '';
+    document.getElementById('step-count').textContent = '0 adım';
+  }
+
+  function render() {
+    renderBank('left');
+    renderBank('right');
+    renderBoat();
+
+    document.getElementById('moves').textContent = state.moves;
+    document.getElementById('crossings').textContent = state.crossings;
+    document.getElementById('boat').dataset.side = state.boatSide;
+
+    const crossBtn = document.getElementById('cross-btn');
+    crossBtn.disabled =
+      !state.boat.includes('farmer') ||
+      state.gameOver ||
+      state.gameWon ||
+      state.animating;
+  }
+
+  function renderBank(side) {
+    const container = document.getElementById(side + '-entities');
+    container.innerHTML = '';
+    ENTITY_ORDER.forEach(id => {
+      if (state[side].has(id)) {
+        const el = createEntity(id, () => onBankClick(id, side));
+        container.appendChild(el);
+      }
+    });
+  }
+
+  function renderBoat() {
+    const deck = document.getElementById('boat-deck');
+    deck.innerHTML = '';
+    for (let i = 0; i < 2; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'boat-slot';
+      const id = state.boat[i];
+      if (id) {
+        const el = createEntity(id, () => onBoatClick(id));
+        el.classList.add('in-boat');
+        slot.appendChild(el);
+      }
+      deck.appendChild(slot);
+    }
+  }
+
+  function createEntity(id, onClick) {
+    const el = document.createElement('div');
+    el.className = 'entity spawn';
+    el.textContent = ENTITIES[id].emoji;
+    el.title = ENTITIES[id].name;
+    el.dataset.id = id;
+    el.addEventListener('click', onClick);
+    const label = document.createElement('span');
+    label.className = 'entity-label';
+    label.textContent = ENTITIES[id].name;
+    el.appendChild(label);
+    setTimeout(() => el.classList.remove('spawn'), 350);
+    return el;
+  }
+
+  function onBankClick(id, side) {
+    if (state.gameOver || state.gameWon || state.animating) return;
+    if (side !== state.boatSide) {
+      flashMessage('Kayık bu yakada değil!', 'lose');
+      return;
+    }
+    if (state.boat.length >= 2) {
+      flashMessage('Kayık dolu! En fazla iki kişi sığar.', 'lose');
+      return;
+    }
+    state[side].delete(id);
+    state.boat.push(id);
+    state.moves++;
+    logStep(
+      `${ENTITIES[id].acc} kayığa bindirdin.`,
+      `BİNDİR(${ENTITIES[id].name})`,
+      'load'
+    );
+    showMessage(getStatusHint());
+    render();
+  }
+
+  function onBoatClick(id) {
+    if (state.gameOver || state.gameWon || state.animating) return;
+    const sideName = state.boatSide === 'left' ? 'sol' : 'sağ';
+    state.boat = state.boat.filter(x => x !== id);
+    state[state.boatSide].add(id);
+    state.moves++;
+    logStep(
+      `${ENTITIES[id].acc} kayıktan ${sideName} yakaya indirdin.`,
+      `İNDİR(${ENTITIES[id].name})`,
+      'unload'
+    );
+    showMessage(getStatusHint());
+    render();
+  }
+
+  function crossRiver() {
+    if (state.animating) return;
+    if (!state.boat.includes('farmer')) {
+      flashMessage('Kayığı çiftçi sürmeli! Önce çiftçiyi kayığa koy.', 'lose');
+      return;
+    }
+
+    state.animating = true;
+    const passengers = state.boat.filter(x => x !== 'farmer');
+    const fromSide = state.boatSide === 'left' ? 'sol' : 'sağ';
+    state.boatSide = state.boatSide === 'left' ? 'right' : 'left';
+    const toSide = state.boatSide === 'left' ? 'sol' : 'sağ';
+    state.crossings++;
+    state.moves++;
+
+    let passengerText;
+    if (passengers.length === 0) {
+      passengerText = 'Çiftçi yalnız geçti.';
+    } else {
+      const names = passengers.map(p => ENTITIES[p].name).join(' ile ');
+      passengerText = `Çiftçi ve ${names} birlikte geçti.`;
+    }
+    logStep(
+      `Kayığı ${fromSide} yakadan ${toSide} yakaya geçirdin. ${passengerText}`,
+      `GEÇ(${toSide})`,
+      'cross'
+    );
+
+    document.getElementById('boat').classList.add('crossing');
+    document.getElementById('boat').dataset.side = state.boatSide;
+    showMessage('⛵ Kayık karşıya geçiyor…');
+    document.getElementById('cross-btn').disabled = true;
+
+    setTimeout(() => {
+      document.getElementById('boat').classList.remove('crossing');
+
+      // Disembark
+      state.boat.forEach(id => state[state.boatSide].add(id));
+      state.boat = [];
+      state.animating = false;
+      render();
+
+      // Check failure on the bank the farmer just left
+      const otherSide = state.boatSide === 'left' ? 'right' : 'left';
+      const there = state[otherSide];
+
+      if (there.has('wolf') && there.has('sheep') && !there.has('farmer')) {
+        logStep(
+          'Çiftçi yokken kurt kuzuyu yedi. Oyun bitti.',
+          '✗ KAYBET()',
+          'lose'
+        );
+        endGame(false, '🐺 Kurt, kuzuyu yedi! Çiftçi yokken kurt ile kuzuyu birlikte bırakma.');
+        return;
+      }
+      if (there.has('sheep') && there.has('grass') && !there.has('farmer')) {
+        logStep(
+          'Çiftçi yokken kuzu otu yedi. Oyun bitti.',
+          '✗ KAYBET()',
+          'lose'
+        );
+        endGame(false, '🐑 Kuzu otu yedi! Çiftçi yokken kuzu ile otu birlikte bırakma.');
+        return;
+      }
+
+      // Win check
+      if (
+        state.right.has('farmer') &&
+        state.right.has('wolf') &&
+        state.right.has('sheep') &&
+        state.right.has('grass')
+      ) {
+        const optimal = state.crossings === 7 ? ' Hem de en az hamleyle! ⭐' : '';
+        logStep(
+          `Tüm varlıklar sağ yakada. Bulmaca ${state.crossings} geçişte çözüldü.`,
+          '✓ KAZAN()',
+          'win'
+        );
+        endGame(true, `🎉 Tebrikler! ${state.crossings} geçişte herkes karşıya geçti!${optimal}`);
+        return;
+      }
+
+      showMessage(getStatusHint());
+    }, 1300);
+  }
+
+  function getStatusHint() {
+    const sideLabel = state.boatSide === 'left' ? 'sol' : 'sağ';
+    if (state.boat.length === 0) {
+      return `Kayık ${sideLabel} yakada. Birini kayığa koymak için tıkla.`;
+    }
+    if (!state.boat.includes('farmer')) {
+      return 'Kayıkta çiftçi yok — kayık hareket edemez.';
+    }
+    if (state.boat.length === 1) {
+      return 'İstersen yanına bir varlık daha ekleyebilirsin, ya da yalnız geç.';
+    }
+    return 'Hazır! Nehri Geç düğmesine bas.';
+  }
+
+  function showMessage(html) {
+    const msg = document.getElementById('message');
+    msg.innerHTML = html;
+    msg.className = 'message';
+  }
+
+  function flashMessage(text, type) {
+    const msg = document.getElementById('message');
+    msg.innerHTML = text;
+    msg.className = 'message ' + type;
+    msg.classList.add('shake');
+    setTimeout(() => msg.classList.remove('shake'), 400);
+  }
+
+  function endGame(won, text) {
+    state.gameOver = !won;
+    state.gameWon = won;
+    const msg = document.getElementById('message');
+    msg.innerHTML = text;
+    msg.className = 'message ' + (won ? 'win' : 'lose');
+    if (won) {
+      document.querySelectorAll('#right-entities .entity').forEach((el, i) => {
+        setTimeout(() => el.classList.add('celebrate'), i * 80);
+      });
+      launchConfetti();
+    }
+    render();
+  }
+
+  function launchConfetti() {
+    const colors = ['#c84b31', '#e89c3a', '#7ba05b', '#4a90b8', '#a06b46'];
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (2 + Math.random() * 2) + 's';
+      c.style.animationDelay = (Math.random() * 0.6) + 's';
+      c.style.transform = `rotate(${Math.random() * 360}deg)`;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4500);
+    }
+  }
+
+  function reset() {
+    initState();
+    clearLog();
+    render();
+    showMessage('Çiftçiyi ve bir varlığı kayığa koy, sonra <strong>Nehri Geç</strong>\'e bas.');
+  }
+
+  document.getElementById('cross-btn').addEventListener('click', crossRiver);
+  document.getElementById('reset-btn').addEventListener('click', reset);
+  document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+
+  initState();
+  render();
+</script>
+</body>
+</html>

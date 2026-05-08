@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akış Şeması Atölyesi</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#FFFAF2;--card:#fff;--orange:#FF6D3F;--teal:#2EC4B6;--yellow:#FFD166;--purple:#9B5DE5;--blue:#4EA8DE;--green:#06D6A0;--red:#EF476F;--pink:#F78FB3;--text:#2D3436;--muted:#8395A7;--shadow:0 6px 24px rgba(0,0,0,0.07)}
+body{font-family:'Quicksand',sans-serif;min-height:100vh;background:linear-gradient(170deg,#FFFAF2 0%,#FFF0E0 35%,#E8FBF5 65%,#FFFAF2 100%);padding:14px 10px 50px;position:relative;overflow-x:hidden}
+@keyframes popIn{0%{transform:scale(0.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes confettiDrop{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(600px) rotate(800deg);opacity:0}}
+@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.3) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes countUp{from{transform:scale(1.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes bounceBtn{0%{transform:scale(1)}30%{transform:scale(0.94)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes correctFlash{0%{background:rgba(6,214,160,0.3)}100%{background:transparent}}
+#screen{max-width:520px;margin:0 auto;transition:opacity 0.22s,transform 0.22s}
+#screen.fading{opacity:0;transform:translateY(12px)}
+select{outline:none}
+</style>
+</head>
+<body>
+<div id="confetti-layer" style="position:fixed;inset:0;pointer-events:none;z-index:9999"></div>
+<div style="position:absolute;top:40px;right:-10px;opacity:.04;font-size:120px;pointer-events:none;transform:rotate(12deg)">◇</div>
+<div style="position:absolute;bottom:60px;left:-20px;opacity:.04;font-size:100px;pointer-events:none;transform:rotate(-8deg)">▱</div>
+<div style="position:absolute;top:45%;right:10px;opacity:.03;font-size:90px;pointer-events:none">○</div>
+<div id="screen"></div>
+<p style="text-align:center;color:#d0d0d0;font-size:11px;margin-top:24px;font-weight:600">🎓 5. Sınıf Bilişim Teknolojileri</p>
+
+<script>
+// ═══ DATA ═══
+const quizData=[
+  {type:"scenario",emoji:"🍳",q:"Ece yumurta pişirme algoritması çiziyor. 'Yumurta pişti mi?' sorusunu hangi şekle yazmalı?",opts:[{s:"rect",l:"Dikdörtgen"},{s:"diamond",l:"Eşkenar Dörtgen"},{s:"oval",l:"Oval"},{s:"parallelogram",l:"Paralelkenar"}],a:1},
+  {type:"scenario",emoji:"🏫",q:"Ali okula gitme algoritmasında ilk adım olan 'Başla' ifadesini hangi şekle yazmalı?",opts:[{s:"rect",l:"Dikdörtgen"},{s:"parallelogram",l:"Paralelkenar"},{s:"diamond",l:"Eşkenar Dörtgen"},{s:"oval",l:"Oval"}],a:3},
+  {type:"scenario",emoji:"🧮",q:"Öğretmen 'Kullanıcıdan iki sayı al' adımını çizmeni istiyor. Hangi şekli kullanırsın?",opts:[{s:"oval",l:"Oval"},{s:"diamond",l:"Eşkenar Dörtgen"},{s:"parallelogram",l:"Paralelkenar"},{s:"rect",l:"Dikdörtgen"}],a:2},
+  {type:"scenario",emoji:"🧹",q:"Oda toplama algoritmasında 'Yatağı topla' adımı bir işlemdir. Hangi şekle yazılır?",opts:[{s:"diamond",l:"Eşkenar Dörtgen"},{s:"rect",l:"Dikdörtgen"},{s:"oval",l:"Oval"},{s:"parallelogram",l:"Paralelkenar"}],a:1},
+  {type:"purpose",shape:"diamond",q:"Bu şekli bir akış şemasında gördüğünde ne anlarsın?",opts:["Algoritma burada sona eriyor","Bir veri girişi yapılıyor","Bir soru soruluyor ve iki yol var","Bir işlem yapılıyor"],a:2},
+  {type:"purpose",shape:"parallelogram",q:"Bu şekil akış şemasında ne anlama gelir?",opts:["Bir karar veriliyor","Algoritmaya bilgi giriyor veya sonuç çıkıyor","Bir işlem yapılıyor","Algoritma başlıyor"],a:1},
+  {type:"purpose",shape:"rect",q:"Bu şekli bir akış şemasında ne zaman kullanırsın?",opts:["Evet/Hayır sorusu sorarken","Algoritmayı bitirirken","Bir iş yaparken (toplama, çarpma vb.)","Kullanıcıdan bilgi alırken"],a:2},
+  {type:"purpose",shape:"oval",q:"Bu şekil akış şemasının neresinde bulunur?",opts:["Sadece ortasında","Sadece karar noktalarında","En başında ve en sonunda","Veri giriş noktalarında"],a:2},
+  {type:"text",emoji:"📋",q:"Bir akış şemasında 'Sonucu ekrana yaz' ifadesi neden paralelkenara yazılır?",opts:["Çünkü bir karar veriliyor","Çünkü dışarıya veri çıkışı yapılıyor","Çünkü bir işlem yapılıyor","Çünkü algoritma bitiyor"],a:1},
+  {type:"text",emoji:"🔀",q:"Akış şemasında eşkenar dörtgenden neden İKİ ok çıkar?",opts:["Çünkü algoritma iki kez başlar","Çünkü iki farklı işlem yapılır","Çünkü sorunun 'Evet' ve 'Hayır' cevabı vardır","Çünkü iki veri girilir"],a:2},
+  {type:"which_wrong",emoji:"🚫",q:"Aşağıdakilerden hangisi YANLIŞTIR?",opts:["Oval → Başla / Bitir","Dikdörtgen → İşlem","Eşkenar Dörtgen → Veri Girişi","Paralelkenar → Giriş / Çıkış"],a:2},
+  {type:"which_wrong",emoji:"❌",q:"Aşağıdakilerden hangisi YANLIŞTIR?",opts:["Ok → Akış yönünü gösterir","Dikdörtgen → 'Sayıyı 2 ile çarp' yazılır","Oval → 'Hava güzel mi?' yazılır","Paralelkenar → 'Adını gir' yazılır"],a:2},
+];
+const matchItems=[
+  {shape:"oval",text:"Başla / Bitir",emoji:"🏁",color:"#06D6A0"},
+  {shape:"rect",text:"İşlem yapmak",emoji:"⚙️",color:"#4EA8DE"},
+  {shape:"diamond",text:"Karar vermek",emoji:"🤔",color:"#FFD166"},
+  {shape:"parallelogram",text:"Veri giriş/çıkışı",emoji:"📥",color:"#9B5DE5"},
+  {shape:"arrow",text:"Akış yönü",emoji:"➡️",color:"#EF476F"},
+];
+const fillData=[
+  {title:"Yumurta Pişirme",emoji:"🍳",steps:[
+    {t:"oval",txt:"Başla"},{t:"rect",txt:"Tavayı koy"},
+    {t:"rect",txt:"Yağ ekle",blank:true,opts:["Yağ ekle","Bitir","Tabağa koy"]},
+    {t:"rect",txt:"Yumurtayı kır"},
+    {t:"diamond",txt:"Pişti mi?",blank:true,opts:["Pişti mi?","Başla","Tuz at"]},
+    {t:"rect",txt:"Tabağa koy"},{t:"oval",txt:"Bitir"},
+  ]},
+  {title:"Dışarı Çıkma",emoji:"🌂",steps:[
+    {t:"oval",txt:"Başla"},{t:"parallelogram",txt:"Hava durumunu öğren"},
+    {t:"diamond",txt:"Yağmur var mı?",blank:true,opts:["Yağmur var mı?","Koş","Uyu"]},
+    {t:"rect",txt:"Şemsiye al"},
+    {t:"rect",txt:"Ayakkabını giy",blank:true,opts:["Ayakkabını giy","Eve dön","Yemek ye"]},
+    {t:"rect",txt:"Dışarı çık"},{t:"oval",txt:"Bitir"},
+  ]},
+  {title:"Çay Demleme",emoji:"🍵",steps:[
+    {t:"oval",txt:"Başla"},{t:"rect",txt:"Su kaynat"},
+    {t:"rect",txt:"Çaydanlığa çay koy",blank:true,opts:["Çaydanlığa çay koy","Bitir","İç"]},
+    {t:"rect",txt:"Kaynar suyu ekle"},
+    {t:"diamond",txt:"Demlendi mi?",blank:true,opts:["Demlendi mi?","Başla","Su kaynat"]},
+    {t:"rect",txt:"Bardağa doldur"},{t:"oval",txt:"Bitir"},
+  ]},
+  {title:"Market Alışverişi",emoji:"🛒",steps:[
+    {t:"oval",txt:"Başla"},{t:"parallelogram",txt:"Liste yaz"},
+    {t:"rect",txt:"Markete git"},
+    {t:"rect",txt:"Ürünleri sepete koy",blank:true,opts:["Ürünleri sepete koy","Eve dön","Bitir"]},
+    {t:"diamond",txt:"Her şeyi aldın mı?",blank:true,opts:["Her şeyi aldın mı?","Başla","Liste yaz"]},
+    {t:"rect",txt:"Kasaya git"},{t:"oval",txt:"Bitir"},
+  ]},
+  {title:"Diş Fırçalama",emoji:"🪥",steps:[
+    {t:"oval",txt:"Başla"},
+    {t:"rect",txt:"Fırçaya macun sür",blank:true,opts:["Fırçaya macun sür","Bitir","Ağzını çalkala"]},
+    {t:"rect",txt:"Dişlerini fırçala"},
+    {t:"diamond",txt:"2 dakika oldu mu?",blank:true,opts:["2 dakika oldu mu?","Başla","Macun sür"]},
+    {t:"rect",txt:"Ağzını çalkala"},{t:"oval",txt:"Bitir"},
+  ]},
+];
+const buildData=[
+  {title:"Okula Hazırlanma",emoji:"🎒",correct:["s","a","d","e","b","c","f"],pieces:[
+    {id:"a",t:"parallelogram",txt:"Saate bak",c:"#9B5DE5"},
+    {id:"b",t:"rect",txt:"Kahvaltı yap",c:"#4EA8DE"},
+    {id:"c",t:"rect",txt:"Çantanı al",c:"#4EA8DE"},
+    {id:"d",t:"diamond",txt:"Geç mi kaldın?",c:"#FFD166"},
+    {id:"e",t:"rect",txt:"Hızlan!",c:"#EF476F"},
+    {id:"f",t:"oval",txt:"Bitir",c:"#06D6A0"},
+    {id:"s",t:"oval",txt:"Başla",c:"#06D6A0"},
+  ]},
+  {title:"Köpeği Gezdirme",emoji:"🐕",correct:["s","a","b","d","e","c","f"],pieces:[
+    {id:"a",t:"rect",txt:"Tasma tak",c:"#4EA8DE"},
+    {id:"b",t:"parallelogram",txt:"Havayı kontrol et",c:"#9B5DE5"},
+    {id:"c",t:"rect",txt:"Parkta gez",c:"#4EA8DE"},
+    {id:"d",t:"diamond",txt:"Yağmurlu mu?",c:"#FFD166"},
+    {id:"e",t:"rect",txt:"Mont giy",c:"#EF476F"},
+    {id:"f",t:"oval",txt:"Bitir",c:"#06D6A0"},
+    {id:"s",t:"oval",txt:"Başla",c:"#06D6A0"},
+  ]},
+  {title:"Pasta Yapma",emoji:"🎂",correct:["s","a","b","c","d","e","f"],pieces:[
+    {id:"a",t:"parallelogram",txt:"Tarifi oku",c:"#9B5DE5"},
+    {id:"b",t:"rect",txt:"Malzemeleri karıştır",c:"#4EA8DE"},
+    {id:"c",t:"rect",txt:"Fırına koy",c:"#4EA8DE"},
+    {id:"d",t:"diamond",txt:"Pişti mi?",c:"#FFD166"},
+    {id:"e",t:"rect",txt:"Fırından çıkar",c:"#EF476F"},
+    {id:"f",t:"oval",txt:"Bitir",c:"#06D6A0"},
+    {id:"s",t:"oval",txt:"Başla",c:"#06D6A0"},
+  ]},
+];
+const tfData=[
+  {q:"Oval şekil 'Başla' veya 'Bitir' anlamına gelir.",a:true,tip:"Oval = Başla / Bitir"},
+  {q:"Dikdörtgen şekil karar vermek için kullanılır.",a:false,tip:"Karar → Eşkenar dörtgen! Dikdörtgen → İşlem"},
+  {q:"Eşkenar dörtgende 'Evet/Hayır' soruları yer alır.",a:true,tip:"Eşkenar dörtgen = Karar şekli"},
+  {q:"Ok, adımlar arasındaki akış yönünü gösterir.",a:true,tip:"Oklar yönü belirler"},
+  {q:"Paralelkenar bir işlemi gösterir.",a:false,tip:"Paralelkenar → Giriş/Çıkış! İşlem → Dikdörtgen"},
+  {q:"Bir akış şemasında birden fazla karar olabilir.",a:true,tip:"Evet, birden fazla karar noktası olabilir"},
+  {q:"'Bitir' yazan şekil dikdörtgendir.",a:false,tip:"Bitir → Oval şekil!"},
+  {q:"'Sonucu ekrana yaz' ifadesi paralelkenara yazılır.",a:true,tip:"Ekrana yazmak = Çıkış → Paralelkenar"},
+  {q:"Her akış şeması bir 'Başla' şekliyle başlar.",a:true,tip:"Her algoritma Başla ile başlar"},
+  {q:"'İki sayıyı çarp' ifadesi eşkenar dörtgene yazılır.",a:false,tip:"Çarpma bir işlemdir → Dikdörtgen!"},
+];
+const ACTS=[
+  {id:"quiz",emoji:"🧠",title:"Şekil Testi",desc:"12 soru — senaryo, tanıma ve bilgi",color:"#FF6D3F"},
+  {id:"match",emoji:"🔗",title:"Eşleştirme",desc:"Şekilleri anlamlarıyla eşle",color:"#2EC4B6"},
+  {id:"fill",emoji:"✏️",title:"Boşluk Doldur",desc:"5 senaryo — akış şemasını tamamla",color:"#9B5DE5"},
+  {id:"build",emoji:"🧩",title:"Sıralama",desc:"3 senaryo — adımları doğru diz",color:"#4EA8DE"},
+  {id:"tf",emoji:"⚡",title:"Doğru / Yanlış",desc:"10 hızlı soru — bilgini test et",color:"#F78FB3"},
+];
+
+// ═══ STATE ═══
+let screen="home", scores={}, confettiTimer=null;
+
+// ═══ HELPERS ═══
+function shapeSVG(type,size,color){
+  const w=size*1.55,h=size;
+  const id="sh"+type+Math.random().toString(36).slice(2,6);
+  let inner="";
+  const c=color||{oval:"#06D6A0",rect:"#4EA8DE",diamond:"#FFD166",parallelogram:"#9B5DE5",arrow:"#EF476F"}[type]||"#999";
+  if(type==="oval") inner=`<ellipse cx="${w/2}" cy="${h/2}" rx="${w/2-3}" ry="${h/2-3}" fill="${c}" stroke="#fff" stroke-width="2" filter="url(#${id})"/>`;
+  else if(type==="rect") inner=`<rect x="3" y="3" width="${w-6}" height="${h-6}" rx="7" fill="${c}" stroke="#fff" stroke-width="2" filter="url(#${id})"/>`;
+  else if(type==="diamond") inner=`<polygon points="${w/2},3 ${w-3},${h/2} ${w/2},${h-3} 3,${h/2}" fill="${c}" stroke="#fff" stroke-width="2" filter="url(#${id})"/>`;
+  else if(type==="parallelogram") inner=`<polygon points="${w*.18},${h-3} 3,3 ${w*.82},3 ${w-3},${h-3}" fill="${c}" stroke="#fff" stroke-width="2" filter="url(#${id})"/>`;
+  else if(type==="arrow") inner=`<line x1="8" y1="${h/2}" x2="${w-16}" y2="${h/2}" stroke="${c}" stroke-width="4" stroke-linecap="round"/><polygon points="${w-3},${h/2} ${w-16},${h/2-9} ${w-16},${h/2+9}" fill="${c}" stroke="#fff" stroke-width="1.5"/>`;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:inline-block;vertical-align:middle"><defs><filter id="${id}"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="${c}" flood-opacity="0.2"/></filter></defs>${inner}</svg>`;
+}
+
+function flowArrow(color){color=color||"#d0d0d0";return `<svg width="20" height="18" viewBox="0 0 20 18" style="display:block;margin:2px auto"><line x1="10" y1="0" x2="10" y2="12" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/><polygon points="10,18 4,11 16,11" fill="${color}"/></svg>`;}
+
+function starsHTML(count,size){size=size||28;let h="";for(let i=0;i<3;i++)h+=`<span style="font-size:${size}px;filter:${i<count?'none':'grayscale(1) opacity(0.25)'};animation:${i<count?`starPop 0.4s ease ${i*.12}s both`:'none'};display:inline-block">⭐</span>`;return `<div style="display:flex;gap:4px;justify-content:center">${h}</div>`;}
+
+function progressDots(cur,total,color){let h="";for(let i=0;i<total;i++)h+=`<div style="width:${i===cur?28:10}px;height:10px;border-radius:10px;background:${i<cur||i===cur?color:'#e8e8e8'};opacity:${i<=cur?1:.5};transition:all 0.35s ease;display:inline-block"></div>`;return `<div style="display:flex;gap:6px;justify-content:center;margin-bottom:18px">${h}</div>`;}
+
+function btn(label,id,color,big,disabled,extraStyle){
+  color=color||"#FF6D3F";
+  const style=disabled
+    ?`background:#ddd;color:#fff;border:none;border-radius:16px;font-family:'Baloo 2';font-weight:700;cursor:not-allowed;padding:${big?'16px 40px':'12px 28px'};font-size:${big?18:15}px;opacity:.5;${extraStyle||''}`
+    :`background:linear-gradient(135deg,${color},${color}cc);color:#fff;border:none;border-radius:16px;font-family:'Baloo 2';font-weight:700;cursor:pointer;box-shadow:0 5px 18px ${color}35,inset 0 -3px 0 rgba(0,0,0,0.1);padding:${big?'16px 40px':'12px 28px'};font-size:${big?18:15}px;transition:all 0.2s;${extraStyle||''}`;
+  return `<button id="${id}" style="${style}" ${disabled?'disabled':''}>${label}</button>`;
+}
+
+function launchConfetti(){
+  const layer=document.getElementById("confetti-layer");
+  const colors=['#FF6D3F','#2EC4B6','#FFD166','#9B5DE5','#EF476F','#06D6A0','#4EA8DE','#F78FB3'];
+  let h="";
+  for(let i=0;i<50;i++){
+    const l=Math.random()*100,w=Math.random()*10+5,hh=Math.random()*10+5,c=colors[i%colors.length];
+    const dur=Math.random()*2+1.5,del=Math.random()*.6;
+    const rad=Math.random()>.5?'50%':'3px';
+    h+=`<div style="position:absolute;left:${l}%;top:-10px;width:${w}px;height:${hh}px;background:${c};border-radius:${rad};animation:confettiDrop ${dur}s ease-out ${del}s forwards"></div>`;
+  }
+  layer.innerHTML=h;
+  if(confettiTimer) clearTimeout(confettiTimer);
+  confettiTimer=setTimeout(()=>{layer.innerHTML=""},2800);
+}
+
+// ═══ NAV ═══
+function nav(s){
+  const el=document.getElementById("screen");
+  el.classList.add("fading");
+  setTimeout(()=>{screen=s;render();el.classList.remove("fading");},220);
+}
+
+function done(id,score,max){
+  const pct=Math.round((score/max)*100);
+  scores[id]={score,max,pct,stars:pct>=90?3:pct>=60?2:pct>=30?1:0};
+  launchConfetti();
+  nav("result-"+id);
+}
+
+// ═══ RENDER DISPATCH ═══
+function render(){
+  const el=document.getElementById("screen");
+  if(screen==="home") el.innerHTML=renderHome();
+  else if(screen==="quiz") el.innerHTML=renderActivityWrap("quiz",renderQuiz());
+  else if(screen==="match") el.innerHTML=renderActivityWrap("match",renderMatch());
+  else if(screen==="fill") el.innerHTML=renderActivityWrap("fill",renderFill());
+  else if(screen==="build") el.innerHTML=renderActivityWrap("build",renderBuild());
+  else if(screen==="tf") el.innerHTML=renderActivityWrap("tf",renderTF());
+  else if(screen.startsWith("result-")) el.innerHTML=renderResult(screen.replace("result-",""));
+  bindEvents();
+}
+
+// ═══ HOME ═══
+function renderHome(){
+  const totalStars=Object.values(scores).reduce((a,b)=>a+b.stars,0);
+  const completedCount=Object.keys(scores).length;
+  const totalPts=Object.values(scores).reduce((a,b)=>a+b.score,0);
+  let cards="";
+  ACTS.forEach((act,i)=>{
+    const s=scores[act.id];
+    const progressBar=s?`<div style="position:absolute;top:0;left:0;width:${s.pct}%;height:100%;background:${act.color}08;transition:width 0.5s;border-radius:20px"></div>`:"";
+    const badge=s
+      ?`<div style="background:linear-gradient(135deg,${act.color},${act.color}cc);color:#fff;border-radius:14px;padding:7px 14px;font-size:14px;font-weight:800;box-shadow:0 3px 12px ${act.color}30;position:relative;z-index:1;font-family:'Baloo 2'">%${s.pct}</div>`
+      :`<div style="width:36px;height:36px;border-radius:50%;background:${act.color}12;display:flex;align-items:center;justify-content:center;color:${act.color};font-size:18px;font-weight:800;position:relative;z-index:1">→</div>`;
+    const starsRow=s?`<div style="margin-top:6px">${starsHTML(s.stars,18)}</div>`:"";
+    cards+=`<button class="act-card" data-id="${act.id}" style="background:#fff;border:3px solid ${s?act.color+'60':'#f0f0f0'};border-radius:22px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);text-align:left;animation:slideUp 0.35s ease ${i*.07}s both;transition:all 0.25s;position:relative;overflow:hidden;width:100%">
+      ${progressBar}
+      <div style="width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,${act.color}20,${act.color}0a);display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid ${act.color}25;flex-shrink:0;position:relative;z-index:1">${act.emoji}</div>
+      <div style="flex:1;position:relative;z-index:1">
+        <div style="font-size:17px;font-weight:800;color:var(--text);font-family:'Baloo 2'">${act.title}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:2px">${act.desc}</div>
+        ${starsRow}
+      </div>
+      ${badge}
+    </button>`;
+  });
+  const starsBanner=totalStars>0?`<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;background:rgba(255,255,255,0.15);border-radius:14px;padding:8px 14px;backdrop-filter:blur(8px)"><span style="color:#FFD166;font-size:22px;font-weight:800">${"⭐".repeat(totalStars)}</span><span style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:700;margin-left:4px">(${completedCount}/5)</span></div>`:"";
+  return `<div>
+    <div style="background:linear-gradient(135deg,#FF6D3F,#FF8F5E,#FFB088);border-radius:26px;padding:26px 22px;margin-bottom:18px;box-shadow:0 8px 32px rgba(255,109,63,0.25);position:relative;overflow:hidden">
+      <div style="position:absolute;top:-25px;right:-25px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.1)"></div>
+      <div style="position:absolute;bottom:-35px;left:-15px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+        <div style="width:58px;height:58px;border-radius:18px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:32px;animation:float 3s ease-in-out infinite;border:2px solid rgba(255,255,255,0.3);flex-shrink:0">🔶</div>
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:#fff;margin:0;font-family:'Baloo 2';line-height:1.1;text-shadow:0 2px 6px rgba(0,0,0,0.12)">Akış Şeması Atölyesi</h1>
+          <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:3px 0 0;font-weight:600">5. Sınıf • 5 Etkinlik • ${totalPts} Puan</p>
+        </div>
+      </div>
+      ${starsBanner}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">${cards}</div>
+  </div>`;
+}
+
+// ═══ ACTIVITY WRAP ═══
+function renderActivityWrap(id,content){
+  const act=ACTS.find(a=>a.id===id);
+  return `<div style="background:#fff;border-radius:26px;padding:18px 16px;box-shadow:var(--shadow);border:2px solid #f0f0f0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button id="btn-home" style="background:#f8f8f8;border:2px solid #eee;border-radius:14px;padding:8px 16px;cursor:pointer;font-family:'Baloo 2';font-size:14px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:4px;transition:all 0.2s">← Geri</button>
+      <h2 style="font-size:18px;font-weight:800;color:var(--text);margin:0;font-family:'Baloo 2'">${act.emoji} ${act.title}</h2>
+    </div>
+    ${content}
+  </div>`;
+}
+
+// ═══ QUIZ ═══
+let quizState={idx:0,sel:null,score:0,streak:0};
+function renderQuiz(){
+  const {idx,sel,streak}=quizState;
+  const q=quizData[idx];
+  const isScenario=q.type==="scenario";
+  const isPurpose=q.type==="purpose";
+  const isWrong=q.type==="which_wrong";
+  const optColors=['#FF6D3F','#2EC4B6','#9B5DE5','#4EA8DE'];
+
+  let badgeColor=isScenario?'#FF6D3F':isPurpose?'#2EC4B6':isWrong?'#EF476F':'#9B5DE5';
+  let badgeBg=isScenario?'#FFF0E6':isPurpose?'#E8F8F5':isWrong?'#FFF0F0':'#F0F0FF';
+  let badgeBorder=isScenario?'#FFD0B8':isPurpose?'#B8EDE6':isWrong?'#FFCDD2':'#D5D0F0';
+  let badgeLabel=isScenario?'📖 SENARYO':isPurpose?'🔍 ŞEKLİ TANI':isWrong?'🚫 HANGİSİ YANLIŞ':'💡 BİLGİ';
+
+  const streakBanner=streak>=2?`<div style="text-align:center;animation:popIn 0.3s ease;margin-bottom:8px"><span style="background:linear-gradient(135deg,#FFD166,#FF6D3F);color:#fff;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:800">🔥 ${streak} seri!</span></div>`:"";
+
+  const purposeShape=isPurpose?`<div style="text-align:center;margin-bottom:12px;animation:popIn 0.35s ease"><div style="display:inline-flex;padding:16px;border-radius:20px;background:linear-gradient(135deg,#FFF9F0,#FFF0E0);border:3px dashed #FFD16644;box-shadow:0 4px 20px rgba(255,209,102,0.15)">${shapeSVG(q.shape,58)}</div></div>`:"";
+
+  const qBg=isWrong?'#FFF5F5':'#FFF9F0';
+  const qBorder=isWrong?'#FFCDD2':'#FFE8D6';
+  const emoji=(q.emoji&&!isPurpose)?`<span style="font-size:30px;display:block;margin-bottom:6px">${q.emoji}</span>`:"";
+
+  let opts="";
+  const optsArr=isScenario?q.opts:q.opts.map(o=>({l:o}));
+  optsArr.forEach((o,i)=>{
+    const correct=sel!==null&&i===q.a;
+    const wrong=sel===i&&i!==q.a;
+    const bg=correct?'var(--green)':wrong?'var(--red)':'#fff';
+    const color=(correct||wrong)?'#fff':'var(--text)';
+    const border=correct?'var(--green)':wrong?'var(--red)':optColors[i]+'45';
+    const shadow=correct?'0 4px 16px rgba(6,214,160,0.3)':wrong?'0 4px 16px rgba(239,71,111,0.3)':'var(--shadow)';
+    const anim=correct?'pulse 0.4s ease':wrong?'shake 0.4s ease':'none';
+    const inner=isScenario
+      ?`${shapeSVG(o.s,32,(correct||wrong)?'rgba(255,255,255,0.85)':undefined)}<span style="font-size:11px;font-weight:700">${o.l}</span>`
+      :`<span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:${(correct||wrong)?'rgba(255,255,255,0.25)':optColors[i]+'15'};color:${(correct||wrong)?'#fff':optColors[i]};align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:'Baloo 2';flex-shrink:0">${"ABCD"[i]}</span><span style="text-align:left;line-height:1.3">${o.l}</span>`;
+    const extra=(correct?'<span style="font-size:16px">✓</span>':wrong?'<span style="font-size:16px">✗</span>':"");
+    opts+=`<button class="quiz-opt" data-i="${i}" style="background:${bg};color:${color};border:3px solid ${border};border-radius:16px;padding:${isScenario?'12px 8px':'14px 10px'};font-family:Quicksand;font-size:13px;font-weight:700;cursor:${sel!==null?'default':'pointer'};transition:all 0.25s;box-shadow:${shadow};animation:${anim};display:flex;flex-direction:${isScenario?'column':'row'};align-items:center;justify-content:center;gap:${isScenario?6:8}px">${inner}${extra}</button>`;
+  });
+
+  return `${progressDots(idx,quizData.length,'var(--orange)')}${streakBanner}
+    <div style="text-align:center;margin-bottom:10px"><span style="background:${badgeBg};color:${badgeColor};border-radius:20px;padding:4px 14px;font-size:11px;font-weight:800;letter-spacing:.5px;border:2px solid ${badgeBorder}">${badgeLabel}</span></div>
+    ${purposeShape}
+    <div style="background:${qBg};border-radius:18px;padding:16px 18px;margin-bottom:16px;border:2px solid ${qBorder};text-align:center;animation:slideUp 0.3s ease">${emoji}<p style="font-size:15px;font-weight:700;color:var(--text);line-height:1.55;font-family:Quicksand">${q.q}</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${opts}</div>`;
+}
+function quizPick(i){
+  if(quizState.sel!==null) return;
+  const q=quizData[quizState.idx];
+  const isCorrect=i===q.a;
+  const bonus=isCorrect?10+quizState.streak*2:0;
+  quizState.sel=i;
+  if(isCorrect){quizState.score+=bonus;quizState.streak+=1;}
+  else quizState.streak=0;
+  // re-render options state
+  const el=document.getElementById("screen");
+  el.querySelector('[data-i="'+q.a+'"]') && applyQuizColors();
+  setTimeout(()=>{
+    if(quizState.idx<quizData.length-1){quizState.idx++;quizState.sel=null;nav("quiz");}
+    else{const s=quizState.score;quizState={idx:0,sel:null,score:0,streak:0};done("quiz",s,quizData.length*10);}
+  },1200);
+}
+function applyQuizColors(){
+  const {sel}=quizState;
+  const q=quizData[quizState.idx];
+  const optColors=['#FF6D3F','#2EC4B6','#9B5DE5','#4EA8DE'];
+  document.querySelectorAll('.quiz-opt').forEach(btn=>{
+    const i=parseInt(btn.dataset.i);
+    const correct=i===q.a;
+    const wrong=i===sel&&i!==q.a;
+    if(correct){btn.style.background='var(--green)';btn.style.borderColor='var(--green)';btn.style.color='#fff';btn.style.animation='pulse 0.4s ease';}
+    else if(wrong){btn.style.background='var(--red)';btn.style.borderColor='var(--red)';btn.style.color='#fff';btn.style.animation='shake 0.4s ease';}
+    btn.style.cursor='default';
+  });
+}
+
+// ═══ MATCH ═══
+let matchState={matched:[],selShape:null,selText:null,wrong:null,attempts:0,shuffled:null};
+function initMatch(){matchState={matched:[],selShape:null,selText:null,wrong:null,attempts:0,shuffled:[...matchItems].sort(()=>Math.random()-.5)};}
+function renderMatch(){
+  if(!matchState.shuffled) initMatch();
+  const {matched,selShape,selText,wrong}=matchState;
+  const progress=matched.length<3?'🔗':matched.length<5?'🌟':'🎉';
+  let leftCol="",rightCol="";
+  matchItems.forEach(p=>{
+    const isDone=matched.includes(p.shape);
+    const active=selShape===p.shape;
+    const fail=wrong&&wrong.shape===p.shape;
+    const bg=isDone?'#E8FCF5':active?p.color+'12':fail?'#FFF0F0':'#fff';
+    const border=isDone?'#06D6A0':active?p.color:fail?'#EF476F':'#eee';
+    leftCol+=`<button class="match-shape" data-shape="${p.shape}" style="background:${bg};border:3px solid ${border};border-radius:16px;padding:10px 18px;cursor:${isDone?'default':'pointer'};transition:all 0.25s;opacity:${isDone?.45:1};transform:${active?'scale(1.06)':'scale(1)'};box-shadow:${active?`0 4px 18px ${p.color}30`:'var(--shadow)'};animation:${fail?'shake 0.35s ease':isDone?'correctFlash 0.5s ease':'none'};display:flex;align-items:center;gap:8px;width:100%">
+      ${shapeSVG(p.shape,34,isDone?'#b0e8d4':p.color)}
+      ${isDone?'<span style="font-size:18px">✅</span>':""}
+    </button>`;
+  });
+  matchState.shuffled.forEach(p=>{
+    const isDone=matched.includes(p.shape);
+    const active=selText===p.text;
+    const fail=wrong&&wrong.text===p.text;
+    const bg=isDone?'#E8FCF5':active?'#EFF6FF':fail?'#FFF0F0':'#fff';
+    const border=isDone?'#06D6A0':active?'#4EA8DE':fail?'#EF476F':'#eee';
+    rightCol+=`<button class="match-text" data-text="${p.text}" style="background:${bg};border:3px solid ${border};border-radius:16px;padding:12px 16px;cursor:${isDone?'default':'pointer'};transition:all 0.25s;opacity:${isDone?.45:1};min-width:165px;transform:${active?'scale(1.05)':'scale(1)'};box-shadow:${active?'0 4px 18px rgba(78,168,222,0.2)':'var(--shadow)'};animation:${fail?'shake 0.35s ease':'none'};display:flex;align-items:center;gap:10px;font-family:Quicksand;width:100%">
+      <span style="font-size:20px">${p.emoji}</span>
+      <span style="font-size:13px;font-weight:700;color:${isDone?'#06D6A0':'var(--text)'}">${p.text}</span>
+      ${isDone?'<span style="margin-left:auto">✅</span>':""}
+    </button>`;
+  });
+  return `<div style="text-align:center;margin-bottom:14px">
+    <div style="font-size:36px;animation:float 3s ease-in-out infinite;margin-bottom:6px">${progress}</div>
+    <p style="font-size:14px;font-weight:700;color:var(--muted)">Soldaki şekle, sağdaki anlamına tıkla! (${matched.length}/5)</p>
+  </div>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:10px">${leftCol}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;justify-content:center">${rightCol}</div>
+  </div>`;
+}
+function matchClickShape(shape){
+  if(matchState.matched.includes(shape)) return;
+  matchState.selShape=shape;
+  checkMatchPair();
+}
+function matchClickText(text){
+  if(matchState.matched.find(m=>matchItems.find(p=>p.shape===m)?.text===text)) return;
+  matchState.selText=text;
+  checkMatchPair();
+}
+function checkMatchPair(){
+  if(matchState.selShape&&matchState.selText){
+    matchState.attempts++;
+    const pair=matchItems.find(p=>p.shape===matchState.selShape);
+    if(pair?.text===matchState.selText){
+      matchState.matched.push(matchState.selShape);
+      matchState.selShape=null;matchState.selText=null;
+      if(matchState.matched.length===5){
+        const bonus=Math.max(20,100-(matchState.attempts-5)*10);
+        setTimeout(()=>{initMatch();done("match",bonus,100);},700);
+        return;
+      }
+    } else {
+      matchState.wrong={shape:matchState.selShape,text:matchState.selText};
+      setTimeout(()=>{matchState.wrong=null;matchState.selShape=null;matchState.selText=null;rerender();},650);
+    }
+    rerender();
+  } else rerender();
+}
+function rerender(){if(screen.startsWith("result-")||screen==="home")return;const wrap=document.getElementById("screen");const inner=screen==="match"?renderMatch():screen==="fill"?renderFill():screen==="build"?renderBuild():"";if(inner){const id=screen;const act=ACTS.find(a=>a.id===id);const content=wrap.querySelector('[id="screen"] > div > div:last-child');if(content)content.innerHTML=inner;}render();}
+
+// ═══ FILL ═══
+let fillState={cur:0,answers:{},checked:false,totalPts:0};
+function initFill(){fillState={cur:0,answers:{},checked:false,totalPts:0};}
+function renderFill(){
+  const {cur,answers,checked}=fillState;
+  const sc=fillData[cur];
+  const shapeCol={oval:'#06D6A0',rect:'#4EA8DE',diamond:'#FFD166',parallelogram:'#9B5DE5',arrow:'#EF476F'};
+  const blanks=sc.steps.filter(s=>s.blank);
+  const allFilled=blanks.every(b=>answers[`${cur}-${b.txt}`]);
+
+  let steps="";
+  sc.steps.forEach((step,i)=>{
+    const key=`${cur}-${step.txt}`;
+    const val=answers[key];
+    const ok=checked&&step.blank&&val===step.txt;
+    const bad=checked&&step.blank&&val!==step.txt;
+    const bg=ok?'#E8FCF5':bad?'#FFF0F0':'#fff';
+    const border=ok?'#06D6A0':bad?'#EF476F':shapeCol[step.t]+'40';
+    const shadow=(ok||bad)?`0 3px 12px ${ok?'rgba(6,214,160,.2)':'rgba(239,71,111,.2)'}`:'var(--shadow)';
+    let inner="";
+    if(step.blank){
+      if(checked){
+        inner=`<span style="font-size:12px;font-weight:700;color:${ok?'#059669':'#dc2626'};font-family:Quicksand">${val||"?"} ${ok?'✅':'❌'}</span>`;
+      } else {
+        const opts=step.opts.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('');
+        inner=`<select class="fill-select" data-key="${key}" style="background:#FFF9F0;color:var(--text);border:2px dashed #FFD166;border-radius:10px;font-size:12px;padding:5px 8px;font-family:Quicksand;font-weight:700;cursor:pointer;min-width:125px"><option value="">❓ Seç...</option>${opts}</select>`;
+      }
+    } else {
+      inner=`<span style="font-size:12px;font-weight:700;color:var(--text);font-family:Quicksand">${step.txt}</span>`;
+    }
+    steps+=`<div style="display:flex;flex-direction:column;align-items:center;animation:slideUp 0.3s ease ${i*.04}s both">
+      <div style="background:${bg};border:2.5px solid ${border};border-radius:14px;padding:6px 14px;display:flex;align-items:center;gap:8px;box-shadow:${shadow};min-width:220px;justify-content:center">
+        ${shapeSVG(step.t,28,ok?'#06D6A0':bad?'#EF476F':shapeCol[step.t])}${inner}
+      </div>
+      ${i<sc.steps.length-1?flowArrow(shapeCol[step.t]+'60'):""}
+    </div>`;
+  });
+
+  const checkBtn=checked
+    ?`${btn(cur<fillData.length-1?`Sonraki: ${fillData[cur+1].emoji} ${fillData[cur+1].title}`:'Sonuçları Gör 🏆','btn-fill-next','var(--green)',false,false)}`
+    :`${btn('Kontrol Et ✓','btn-fill-check','var(--purple)',false,!allFilled)}`;
+
+  return `${progressDots(cur,fillData.length,'var(--purple)')}
+    <div style="text-align:center;margin-bottom:14px">
+      <span style="font-size:42px;display:block;animation:float 2.5s ease-in-out infinite">${sc.emoji}</span>
+      <h3 style="font-size:20px;font-weight:800;color:var(--text);font-family:'Baloo 2';margin-top:4px">${sc.title}</h3>
+      <p style="font-size:13px;color:var(--muted);font-weight:600">Boş adımları doğru tamamla!</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">${steps}</div>
+    <div style="text-align:center;margin-top:18px">${checkBtn}</div>`;
+}
+
+// ═══ BUILD ═══
+let buildState={scIdx:0,pool:[],placed:[],checked:false,totalPts:0};
+function initBuild(){
+  const sc=buildData[0];
+  buildState={scIdx:0,pool:[...sc.pieces].sort(()=>Math.random()-.5),placed:[],checked:false,totalPts:0};
+}
+function renderBuild(){
+  const {scIdx,pool,placed,checked,totalPts}=buildState;
+  const sc=buildData[scIdx];
+  const correctCount=checked?placed.filter((p,i)=>p.id===sc.correct[i]).length:0;
+
+  let poolItems=pool.map(p=>`<button class="build-add" data-id="${p.id}" style="background:#fff;border:2px solid ${p.c}40;border-radius:14px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;box-shadow:var(--shadow);font-family:Quicksand;width:100%">
+    ${shapeSVG(p.t,22,p.c)}<span style="font-size:12px;font-weight:700;color:var(--text)">${p.txt}</span>
+  </button>`).join('');
+  if(pool.length===0) poolItems=`<p style="color:#ccc;font-size:12px;text-align:center;padding:10px;font-weight:600">Tüm parçalar yerleştirildi!</p>`;
+
+  let chartItems=placed.length===0
+    ?`<div style="color:#ddd;font-size:13px;text-align:center;padding:36px 8px;font-weight:700">← Parçalara tıkla</div>`
+    :placed.map((p,i)=>{
+      const ok=checked&&p.id===sc.correct[i];
+      const bad=checked&&p.id!==sc.correct[i];
+      return `<div style="display:flex;flex-direction:column;align-items:center">
+        <button class="build-remove" data-id="${p.id}" data-idx="${i}" style="background:${ok?'#E8FCF5':bad?'#FFF0F0':'#fff'};border:2.5px solid ${ok?'#06D6A0':bad?'#EF476F':'#eee'};border-radius:12px;padding:4px 10px;cursor:${checked?'default':'pointer'};display:flex;align-items:center;gap:6px;transition:all 0.2s;box-shadow:${ok?'0 2px 10px rgba(6,214,160,.15)':bad?'0 2px 10px rgba(239,71,111,.15)':'var(--shadow)'};font-family:Quicksand">
+          ${shapeSVG(p.t,20,ok?'#06D6A0':bad?'#EF476F':p.c)}
+          <span style="font-size:11px;font-weight:700;color:var(--text)">${p.txt}</span>
+          ${ok?'<span>✅</span>':bad?'<span>❌</span>':""}
+        </button>
+        ${i<placed.length-1?flowArrow():""}
+      </div>`;
+    }).join('');
+
+  const actionBtn=!checked
+    ?btn('Kontrol Et ✓','btn-build-check','var(--teal)',false,placed.length!==sc.pieces.length)
+    :`<p style="color:var(--muted);font-size:14px;margin-bottom:10px;font-weight:700">${correctCount}/${sc.pieces.length} doğru! ${correctCount===sc.pieces.length?'🎉':''}</p>${btn(scIdx<buildData.length-1?`Sonraki: ${buildData[scIdx+1].emoji}`:'Sonuçları Gör 🏆','btn-build-next','var(--green)',false,false)}`;
+
+  return `${progressDots(scIdx,buildData.length,'var(--teal)')}
+    <div style="text-align:center;margin-bottom:12px">
+      <span style="font-size:42px;display:block;animation:wiggle 2s ease-in-out infinite">${sc.emoji}</span>
+      <h3 style="font-size:20px;font-weight:800;color:var(--text);font-family:'Baloo 2'">${sc.title}</h3>
+      <p style="font-size:13px;color:var(--muted);font-weight:600">Tıklayarak doğru sıraya diz!</p>
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <div style="background:#FFF9F0;border-radius:20px;padding:14px;border:3px dashed #FFD166;min-width:155px">
+        <div style="font-size:12px;font-weight:800;color:var(--orange);margin-bottom:8px;text-align:center;letter-spacing:.5px">🧩 PARÇALAR</div>
+        <div style="display:flex;flex-direction:column;gap:6px">${poolItems}</div>
+      </div>
+      <div style="background:#fff;border-radius:20px;padding:14px;border:3px solid #eee;min-width:175px;box-shadow:var(--shadow)">
+        <div style="font-size:12px;font-weight:800;color:var(--teal);margin-bottom:8px;text-align:center;letter-spacing:.5px">📋 AKIŞ ŞEMASI</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">${chartItems}</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:18px">${actionBtn}</div>`;
+}
+
+// ═══ TF ═══
+let tfState={idx:0,ans:null,score:0};
+function initTF(){tfState={idx:0,ans:null,score:0};}
+function renderTF(){
+  const {idx,ans,score}=tfState;
+  const q=tfData[idx];
+  const isCorrect=ans!==null&&ans===q.a;
+  const isWrong=ans!==null&&ans!==q.a;
+
+  const qBg=ans===null?'#fff':isCorrect?'#E8FCF5':'#FFF0F0';
+  const qBorder=ans===null?'#eee':isCorrect?'#06D6A0':'#EF476F';
+
+  const tipBox=ans!==null?`<div style="background:${isCorrect?'#E8FCF5':'#FFF0F0'};border-radius:16px;padding:12px 16px;border:2px solid ${isCorrect?'#06D6A0':'#EF476F'};animation:popIn 0.3s ease;text-align:center;margin-bottom:14px">
+    <span style="font-size:22px">${isCorrect?'🎉':'💡'}</span>
+    <p style="font-size:13px;font-weight:700;color:${isCorrect?'#059669':'#dc2626'};margin-top:4px">${isCorrect?'Doğru!':'Yanlış!'} ${q.tip}</p>
+  </div>`:"";
+
+  let btns="";
+  [true,false].forEach(v=>{
+    const label=v?"✅ Doğru":"❌ Yanlış";
+    const color=v?'#06D6A0':'#EF476F';
+    const picked=ans===v;
+    const right=picked&&v===q.a;
+    const wrong=picked&&v!==q.a;
+    btns+=`<button class="tf-btn" data-val="${v}" style="background:${right?'#06D6A0':wrong?'#EF476F':'#fff'};color:${(right||wrong)?'#fff':color};border:4px solid ${right?'#06D6A0':wrong?'#EF476F':color};border-radius:20px;padding:18px 34px;font-family:'Baloo 2';font-size:20px;font-weight:800;cursor:${ans!==null?'default':'pointer'};transition:all 0.2s;box-shadow:${ans===null?`0 5px 18px ${color}20`:'none'};animation:${wrong?'shake 0.4s ease':right?'pulse 0.4s ease':'none'}">${label}</button>`;
+  });
+
+  return `${progressDots(idx,tfData.length,'var(--pink)')}
+    <div style="background:${qBg};border-radius:22px;padding:26px 20px;box-shadow:var(--shadow);text-align:center;margin-bottom:18px;border:3px solid ${qBorder};transition:all 0.3s;animation:slideUp 0.3s ease">
+      <span style="font-size:36px;display:block;margin-bottom:10px">💭</span>
+      <p style="font-size:16px;font-weight:700;color:var(--text);line-height:1.6;font-family:Quicksand">${q.q}</p>
+    </div>
+    ${tipBox}
+    <div style="display:flex;gap:14px;justify-content:center">${btns}</div>`;
+}
+function tfPick(v){
+  if(tfState.ans!==null) return;
+  const q=tfData[tfState.idx];
+  const isCorr=v===q.a;
+  tfState.ans=v;
+  if(isCorr) tfState.score++;
+  // re-render feedback
+  render();
+  setTimeout(()=>{
+    if(tfState.idx<tfData.length-1){tfState.idx++;tfState.ans=null;nav("tf");}
+    else{const s=tfState.score*10;initTF();done("tf",s,tfData.length*10);}
+  },1600);
+}
+
+// ═══ RESULT ═══
+function renderResult(id){
+  const s=scores[id];
+  const act=ACTS.find(a=>a.id===id);
+  const pct=s.pct;
+  const stars=s.stars;
+  const faces=["😅","🙂","😊","🤩"];
+  const msgs=["Tekrar dene!","İyi gidiyorsun!","Harika!","Mükemmel!"];
+  return `<div style="background:#fff;border-radius:26px;padding:28px 20px;box-shadow:var(--shadow);border:2px solid #f0f0f0">
+    <div style="text-align:center;animation:popIn 0.5s ease">
+      <div style="font-size:64px;margin-bottom:8px;animation:float 2s ease-in-out infinite">${faces[stars]}</div>
+      ${starsHTML(stars,40)}
+      <div style="font-size:52px;font-weight:800;color:var(--orange);margin:12px 0 4px;font-family:'Baloo 2';animation:countUp 0.5s ease">%${pct}</div>
+      <p style="color:var(--muted);font-size:15px;font-weight:600;margin-bottom:4px">${s.score}/${s.max} puan • ${act.title}</p>
+      <p style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:20px">${msgs[stars]}</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        ${btn('↩ Tekrar Oyna','btn-replay','var(--blue)',true,false)}
+        ${btn('Ana Sayfaya Dön →','btn-home','var(--green)',true,false)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══ EVENT BINDING ═══
+function bindEvents(){
+  // Home
+  document.querySelectorAll('.act-card').forEach(el=>{
+    el.addEventListener('click',()=>nav(el.dataset.id));
+    el.addEventListener('mouseenter',()=>{el.style.transform='translateY(-3px)';el.style.boxShadow=`0 10px 30px ${ACTS.find(a=>a.id===el.dataset.id).color}20`});
+    el.addEventListener('mouseleave',()=>{el.style.transform='translateY(0)';el.style.boxShadow='var(--shadow)'});
+  });
+  // Back
+  const backBtn=document.getElementById('btn-home');
+  if(backBtn) backBtn.addEventListener('click',()=>nav('home'));
+  // Result
+  const replayBtn=document.getElementById('btn-replay');
+  if(replayBtn){const id=screen.replace('result-','');replayBtn.addEventListener('click',()=>{
+    if(id==='quiz')quizState={idx:0,sel:null,score:0,streak:0};
+    else if(id==='match')initMatch();
+    else if(id==='fill')initFill();
+    else if(id==='build')initBuild();
+    else if(id==='tf')initTF();
+    nav(id);
+  });}
+  const homeBtn2=document.getElementById('btn-home');
+  if(homeBtn2&&screen.startsWith('result-')) homeBtn2.addEventListener('click',()=>nav('home'));
+  // Quiz
+  document.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.addEventListener('click',()=>{quizPick(parseInt(btn.dataset.i));applyQuizColors();});
+  });
+  // Match
+  document.querySelectorAll('.match-shape').forEach(btn=>{
+    btn.addEventListener('click',()=>matchClickShape(btn.dataset.shape));
+  });
+  document.querySelectorAll('.match-text').forEach(btn=>{
+    btn.addEventListener('click',()=>matchClickText(btn.dataset.text));
+  });
+  // Fill selects
+  document.querySelectorAll('.fill-select').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      fillState.answers[sel.dataset.key]=sel.value;
+      // re-render check button state
+      const sc=fillData[fillState.cur];
+      const blanks=sc.steps.filter(s=>s.blank);
+      const allFilled=blanks.every(b=>fillState.answers[`${fillState.cur}-${b.txt}`]);
+      const checkBtn=document.getElementById('btn-fill-check');
+      if(checkBtn) checkBtn.disabled=!allFilled;
+    });
+  });
+  const fillCheck=document.getElementById('btn-fill-check');
+  if(fillCheck) fillCheck.addEventListener('click',()=>{
+    const {cur,answers}=fillState;
+    const sc=fillData[cur];
+    let p=0;
+    sc.steps.filter(s=>s.blank).forEach(b=>{if(answers[`${cur}-${b.txt}`]===b.txt)p+=10;});
+    fillState.totalPts+=p;fillState.checked=true;render();
+  });
+  const fillNext=document.getElementById('btn-fill-next');
+  if(fillNext) fillNext.addEventListener('click',()=>{
+    if(fillState.cur<fillData.length-1){fillState.cur++;fillState.checked=false;nav('fill');}
+    else{const t=fillState.totalPts;initFill();done('fill',t,fillData.length*20);}
+  });
+  // Build
+  document.querySelectorAll('.build-add').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const p=buildState.pool.find(x=>x.id===btn.dataset.id);
+      if(p){buildState.pool=buildState.pool.filter(x=>x.id!==p.id);buildState.placed.push(p);render();}
+    });
+  });
+  document.querySelectorAll('.build-remove').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(buildState.checked) return;
+      const p=buildState.placed.find(x=>x.id===btn.dataset.id);
+      if(p){buildState.placed=buildState.placed.filter(x=>x.id!==p.id);buildState.pool.push(p);render();}
+    });
+  });
+  const buildCheck=document.getElementById('btn-build-check');
+  if(buildCheck) buildCheck.addEventListener('click',()=>{
+    let pts=0;
+    buildState.placed.forEach((p,i)=>{if(p.id===buildData[buildState.scIdx].correct[i])pts+=10;});
+    buildState.totalPts+=pts;buildState.checked=true;render();
+  });
+  const buildNext=document.getElementById('btn-build-next');
+  if(buildNext) buildNext.addEventListener('click',()=>{
+    if(buildState.scIdx<buildData.length-1){
+      buildState.scIdx++;
+      buildState.pool=[...buildData[buildState.scIdx].pieces].sort(()=>Math.random()-.5);
+      buildState.placed=[];buildState.checked=false;nav('build');
+    } else {
+      const t=buildState.totalPts;
+      const max=buildData.reduce((sum,s)=>sum+s.pieces.length*10,0);
+      initBuild();done('build',t,max);
+    }
+  });
+  // TF
+  document.querySelectorAll('.tf-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>tfPick(btn.dataset.val==='true'));
+  });
+}
+
+// ═══ INIT ═══
+initMatch();initFill();initBuild();initTF();
+render();
+</script>
+</body>
+</html>
